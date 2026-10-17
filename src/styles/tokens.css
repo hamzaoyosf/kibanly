@@ -1,0 +1,39 @@
+:root {
+  /* Surfaces (OLED) */
+  --bg: #000000;
+  --bg-elevated: #0A0A0A;
+  --surface: #0F0F12;
+  --surface-2: #16161A;
+  --border: rgba(255, 255, 255, 0.06);
+  --border-strong: rgba(255, 255, 255, 0.12);
+
+  /* Text */
+  --text: #F5F5F7;          /* primary: ~18:1 on #000 */
+  --text-muted: #A1A1AA;    /* secondary: ~7.8:1 */
+  --text-faint: #6B6B76;    /* tertiary: non-essential labels only */
+
+  /* Hub accents (neon) */
+  --action: #22D3EE;        /* Cyan */
+  --action-dim: #0E7490;
+  --growth: #34F5A4;        /* Mint Green */
+  --growth-dim: #0F8F5F;
+  --capital: #FBBF24;       /* Vibrant Amber */
+  --capital-dim: #B45309;
+  --knowledge: #8B5CF6;     /* Electric Violet */
+  --knowledge-dim: #5B21B6;
+
+  /* Semantic */
+  --danger: #FB7185;
+  --success: var(--growth);
+  --warning: var(--capital);
+  --info: var(--action);
+
+  /* Glass & glow */
+  --glass-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01));
+  --glass-blur: blur(18px);
+  --inner-glow-action: inset 0 0 40px -12px rgba(34, 211, 238, 0.35);
+  --inner-glow-growth: inset 0 0 40px -12px rgba(52, 245, 164, 0.35);
+  --inner-glow-capital: inset 0 0 40px -12px rgba(251, 191, 36, 0.35);
+  --inner-glow-knowledge: inset 0 0 40px -12px rgba(139, 92, 246, 0.35);
+  --shadow-card: 0 8px 32px -8px rgba(0, 0, 0, 0.8);
+}
