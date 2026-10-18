@@ -10,11 +10,11 @@ export const KnowledgeWidget: React.FC = () => {
   const { data: resources = [] } = useResources()
 
   // Pinned concepts first, then most recently updated
-  const pinnedNotes = notes.filter((n) => n.pinned).slice(0, 3)
-  const displayNotes = pinnedNotes.length > 0 ? pinnedNotes : notes.slice(0, 3)
+  const pinnedNotes = notes.filter((n) => n && n.pinned).slice(0, 3)
+  const displayNotes = pinnedNotes.length > 0 ? pinnedNotes : notes.filter(Boolean).slice(0, 3)
 
-  const activeReading = resources.find((r) => r.status === 'reading') || resources[0] || null
-  const totalLinksCount = notes.reduce((sum, n) => sum + (n.linkedNoteIds?.length || 0), 0)
+  const activeReading = resources.find((r) => r && r.status === 'reading') || resources[0] || null
+  const totalLinksCount = notes.reduce((sum, n) => sum + (n?.linkedNoteIds?.length || 0), 0)
 
   return (
     <div

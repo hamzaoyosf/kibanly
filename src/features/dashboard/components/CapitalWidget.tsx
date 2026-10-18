@@ -42,13 +42,13 @@ export const CapitalWidget: React.FC = () => {
   const topMilestone = useMemo(() => {
     return (
       milestones
-        .filter((m) => m.currentMinor < m.targetMinor)
-        .sort((a, b) => b.currentMinor / b.targetMinor - a.currentMinor / a.targetMinor)[0] || null
+        .filter((m) => m && (m.targetMinor || 0) > 0 && (m.currentMinor || 0) < m.targetMinor)
+        .sort((a, b) => (b.currentMinor || 0) / b.targetMinor - (a.currentMinor || 0) / a.targetMinor)[0] || null
     )
   }, [milestones])
 
-  const topMilestonePercent = topMilestone
-    ? Math.round((topMilestone.currentMinor / topMilestone.targetMinor) * 100)
+  const topMilestonePercent = topMilestone && topMilestone.targetMinor > 0
+    ? Math.round(((topMilestone.currentMinor || 0) / topMilestone.targetMinor) * 100)
     : 0
 
   const topMilestoneEta = topMilestone

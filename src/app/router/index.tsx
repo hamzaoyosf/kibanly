@@ -1,12 +1,11 @@
 import { lazy } from 'react'
-import { createBrowserRouter } from 'react-router-dom'
+import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { BentoShell } from '../layout/BentoShell'
+import { ErrorPage } from '../layout/ErrorPage'
 import { PlaceholderView } from '@/components/ui/PlaceholderView'
+import { DashboardPage } from '@/features/dashboard/DashboardPage'
 
-// Route-level code splitting for rapid initial paint & modular chunks
-const DashboardPage = lazy(() =>
-  import('@/features/dashboard/DashboardPage').then((m) => ({ default: m.DashboardPage }))
-)
+// Secondary Hub pages remain code-split for on-demand modular loading
 const InboxPage = lazy(() =>
   import('@/features/inbox/InboxPage').then((m) => ({ default: m.InboxPage }))
 )
@@ -27,10 +26,15 @@ export const router = createBrowserRouter([
   {
     path: '/',
     element: <BentoShell />,
+    errorElement: <ErrorPage />,
     children: [
       {
         index: true,
         element: <DashboardPage />,
+      },
+      {
+        path: 'index.html',
+        element: <Navigate to="/" replace />,
       },
       {
         path: 'inbox',
@@ -60,6 +64,14 @@ export const router = createBrowserRouter([
         path: 'settings',
         element: <PlaceholderView title="Settings" subtitle="Preferences & Sync coming soon" />,
       },
+      {
+        path: '*',
+        element: <ErrorPage isNotFound />,
+      },
     ],
+  },
+  {
+    path: '*',
+    element: <ErrorPage isNotFound />,
   },
 ])

@@ -21,14 +21,14 @@ export const GrowthWidget: React.FC = () => {
 
   // Today's audit (if logged)
   const todayAudit = useMemo(() => {
-    return energyLogs.find((l) => l.date === todayStr) || null
+    return energyLogs.find((l) => l && l.date === todayStr) || null
   }, [energyLogs, todayStr])
 
   // Active habit logs for today
   const todayLogSet = useMemo(() => {
     return new Set(
       habitLogs
-        .filter((l) => l.date === todayStr && l.done)
+        .filter((l) => l && l.date === todayStr && l.done)
         .map((l) => l.habitId)
     )
   }, [habitLogs, todayStr])
@@ -39,7 +39,7 @@ export const GrowthWidget: React.FC = () => {
 
   // Habits to display (up to 4 active)
   const displayHabits = habits.slice(0, 4)
-  const completedTodayCount = displayHabits.filter((h) => todayLogSet.has(h.id)).length
+  const completedTodayCount = displayHabits.filter((h) => h && todayLogSet.has(h.id)).length
 
   return (
     <div

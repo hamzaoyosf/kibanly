@@ -29,8 +29,8 @@ export const ActionWidget: React.FC = () => {
   // Filter timeblocks for today or upcoming
   const todayStr = new Date().toISOString().slice(0, 10)
   const todayBlocks = timeBlocks
-    .filter((b: TimeBlock) => b.start.startsWith(todayStr))
-    .sort((a: TimeBlock, b: TimeBlock) => new Date(a.start).getTime() - new Date(b.start).getTime())
+    .filter((b: TimeBlock) => b && typeof b.start === 'string' && b.start.startsWith(todayStr))
+    .sort((a: TimeBlock, b: TimeBlock) => new Date(a?.start || 0).getTime() - new Date(b?.start || 0).getTime())
     .slice(0, 3)
 
   const handleToggleTask = (id: string, currentStatus: string) => {
