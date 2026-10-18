@@ -56,7 +56,7 @@ export async function classifyInboxItemWithAI(
     throw new Error('MISSING_GEMINI_API_KEY: Please provide a Gemini API key in .env.local or settings.')
   }
 
-  const prompt = `You are the KiBANLY Personal OS Intelligence Assistant.
+  const prompt = `You are the OBOiFY Personal Intelligence Assistant.
 Analyze this raw user capture and determine its optimal personal productivity classification:
 "${text}"
 
@@ -169,7 +169,7 @@ export async function batchClassifyInboxItems(
   }
 
   const itemsPayload = items.map((i) => ({ id: i.id, text: i.text }))
-  const prompt = `You are KiBANLY OS Personal Intelligence engine.
+  const prompt = `You are OBOiFY Personal Intelligence engine.
 Classify each of the following inbox items. Return a JSON array of objects with fields:
 - id: matches the input id
 - category: "task" | "note" | "expense" | "income" | "event" | "habit" | "reference"

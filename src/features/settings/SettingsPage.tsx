@@ -23,6 +23,7 @@ import { useAuth } from '@/features/auth/useAuth'
 import { migrateLocalToCloud } from '@/data/firebase/migrateLocalToCloud'
 import { exportData, importData, ImportResult } from '@/data/backup/backupService'
 import { usePreferencesStore } from '@/app/store/preferencesStore'
+import { useExchangeRates } from '@/features/capital/useExchangeRates'
 import { formatMoney } from '@/lib/money'
 import {
   CalendarSyncModal,
@@ -52,6 +53,8 @@ export const SettingsPage: React.FC = () => {
     dailyGoalTasks,
     setDailyGoalTasks,
   } = usePreferencesStore()
+
+  const { getRate, isFetching: isRatesFetching, refreshRates } = useExchangeRates()
 
   // State
   const [isCalendarModalOpen, setIsCalendarModalOpen] = useState(false)
@@ -157,6 +160,7 @@ export const SettingsPage: React.FC = () => {
   const CURRENCY_OPTIONS = [
     { code: 'USD', symbol: '$', label: 'USD ($) - US Dollar' },
     { code: 'EUR', symbol: '€', label: 'EUR (€) - Euro' },
+    { code: 'MAD', symbol: 'DH', label: 'MAD (DH) - Moroccan Dirham' },
     { code: 'GBP', symbol: '£', label: 'GBP (£) - British Pound' },
     { code: 'JPY', symbol: '¥', label: 'JPY (¥) - Japanese Yen' },
     { code: 'CAD', symbol: '$', label: 'CAD ($) - Canadian Dollar' },
@@ -186,7 +190,7 @@ export const SettingsPage: React.FC = () => {
 
         <div className="flex items-center space-x-2 text-xs font-mono text-text-muted bg-surface-2 px-3 py-1.5 rounded-xl border border-[rgba(255,255,255,0.06)] self-start sm:self-auto">
           <span className="w-2 h-2 rounded-full bg-growth shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
-          <span>KiBANLY OS v0.1.0</span>
+          <span>OBOiFY v0.1.0</span>
         </div>
       </div>
 
@@ -225,7 +229,7 @@ export const SettingsPage: React.FC = () => {
             </div>
 
             <p className="text-xs text-text-muted leading-relaxed mt-3">
-              KiBANLY is local-first. Your Tasks, Habits, Energy Audits, Ledger Transactions,
+              OBOiFY is local-first. Your Tasks, Habits, Energy Audits, Ledger Transactions,
               and Zettelkasten Notes can be exported as a single portable JSON payload anytime.
             </p>
 
@@ -317,7 +321,7 @@ export const SettingsPage: React.FC = () => {
                   )}
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-text truncate">
-                      {user.displayName || 'KiBANLY User'}
+                      {user.displayName || 'OBOiFY User'}
                     </p>
                     <p className="text-xs text-text-muted truncate font-mono">{user.email}</p>
                   </div>
@@ -326,9 +330,11 @@ export const SettingsPage: React.FC = () => {
                   </span>
                 </div>
 
-                <div className="pt-2 border-t border-[rgba(255,255,255,0.06)] flex items-center justify-between text-[11px] font-mono text-text-muted">
-                  <span>UID: {user.uid.slice(0, 10)}...</span>
-                  <span className="text-growth">Firestore Active</span>
+                <div className="pt-2 border-t border-border flex items-center justify-end text-[11px] font-mono">
+                  <span className="text-emerald-400 flex items-center space-x-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block animate-pulse" />
+                    <span>Firestore Active</span>
+                  </span>
                 </div>
               </div>
             ) : (
@@ -405,7 +411,7 @@ export const SettingsPage: React.FC = () => {
 
             <p className="text-xs text-text-muted leading-relaxed mt-3">
               Google Calendar 2-Way Sync pulls primary calendar meetings directly into your Action Hub Timeline
-              and pushes scheduled KiBANLY TimeBlocks directly to your Google account.
+              and pushes scheduled OBOiFY TimeBlocks directly to your Google account.
             </p>
 
             <div className="mt-4 p-3.5 rounded-xl bg-surface-2/60 border border-[rgba(255,255,255,0.06)] space-y-2 text-xs">
@@ -547,6 +553,22 @@ export const SettingsPage: React.FC = () => {
                     </option>
                   ))}
                 </select>
+
+                {defaultCurrency !== 'USD' && (
+                  <div className="flex items-center justify-between text-[11px] font-mono text-text-muted pt-1">
+                    <span>1 USD ≈ {getRate('USD', defaultCurrency).toFixed(2)} {defaultCurrency}</span>
+                    <button
+                      type="button"
+                      onClick={() => refreshRates(true)}
+                      disabled={isRatesFetching}
+                      className="flex items-center space-x-1 text-capital hover:underline disabled:opacity-50"
+                      title="Sync live currency exchange rates"
+                    >
+                      <RefreshCw className={cn('w-3 h-3', isRatesFetching && 'animate-spin')} />
+                      <span>{isRatesFetching ? 'Syncing...' : 'Sync Live Rates'}</span>
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Daily Tasks Target */}

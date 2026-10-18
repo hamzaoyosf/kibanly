@@ -83,7 +83,7 @@ export class FirestoreRepo<
     } catch (err: any) {
       // In-memory fallback if Firestore index is required or query constraint fails
       console.warn(
-        `[KiBANLY FirestoreRepo] Query failed on ${this.collectionName}, falling back to client-side filter:`,
+        `[OBOiFY FirestoreRepo] Query failed on ${this.collectionName}, falling back to client-side filter:`,
         err?.message || err
       )
       const snap = await getDocs(colRef)
@@ -133,7 +133,7 @@ export class FirestoreRepo<
       const res = this.schema.safeParse(snap.data())
       return res.success ? res.data : null
     } catch (err) {
-      console.error(`[KiBANLY FirestoreRepo] get(${id}) error:`, err)
+      console.error(`[OBOiFY FirestoreRepo] get(${id}) error:`, err)
       return null
     }
   }
@@ -142,7 +142,7 @@ export class FirestoreRepo<
     const colRef = this.getCollectionRef()
     if (!colRef) {
       throw new Error(
-        `[KiBANLY FirestoreRepo] Cannot create record in ${this.collectionName}: No active cloud session.`
+        `[OBOiFY FirestoreRepo] Cannot create record in ${this.collectionName}: No active cloud session.`
       )
     }
 
@@ -169,7 +169,7 @@ export class FirestoreRepo<
     const colRef = this.getCollectionRef()
     if (!colRef) {
       throw new Error(
-        `[KiBANLY FirestoreRepo] Cannot update record in ${this.collectionName}: No active cloud session.`
+        `[OBOiFY FirestoreRepo] Cannot update record in ${this.collectionName}: No active cloud session.`
       )
     }
 
@@ -219,7 +219,7 @@ export class FirestoreRepo<
         cb(items)
       },
       (err) => {
-        console.error(`[KiBANLY FirestoreRepo] onSnapshot error on ${this.collectionName}:`, err)
+        console.error(`[OBOiFY FirestoreRepo] onSnapshot error on ${this.collectionName}:`, err)
       }
     )
   }

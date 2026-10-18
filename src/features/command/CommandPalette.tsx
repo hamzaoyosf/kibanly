@@ -89,7 +89,7 @@ export const CommandPalette: React.FC = () => {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center pt-16 sm:pt-24 px-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex items-start justify-center pt-16 sm:pt-24 px-4 bg-black/70 animate-in fade-in duration-150"
       onClick={(e) => {
         if (e.target === e.currentTarget) closeCommandPalette()
       }}
@@ -98,13 +98,13 @@ export const CommandPalette: React.FC = () => {
     >
       <div
         className={cn(
-          'w-full max-w-2xl card p-0 border border-[rgba(255,255,255,0.14)]',
-          'bg-surface/95 shadow-2xl overflow-hidden flex flex-col max-h-[80vh]'
+          'w-full max-w-2xl card p-0 border border-border',
+          'bg-surface shadow-2xl overflow-hidden flex flex-col max-h-[80vh]'
         )}
       >
         {/* Search Header */}
-        <div className="flex items-center px-4 py-3.5 border-b border-[rgba(255,255,255,0.08)] bg-surface-2/40">
-          <Search className="w-5 h-5 text-action shrink-0 mr-3" />
+        <div className="flex items-center px-4 py-3.5 border-b border-border bg-surface-2/40">
+          <Search className="w-5 h-5 text-emerald-400 shrink-0 mr-3" />
           <input
             ref={inputRef}
             type="text"
@@ -161,17 +161,17 @@ export const CommandPalette: React.FC = () => {
                           onClick={() => item.onSelect()}
                           onMouseEnter={() => setSelectedIndex(itemIndex)}
                           className={cn(
-                            'flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-100',
+                            'flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-100',
                             isSelected
-                              ? 'bg-action/15 text-action border-l-2 border-action pl-2.5'
+                              ? 'bg-surface-2 text-text border-l-2 border-emerald-500 pl-2.5 shadow-sm'
                               : 'text-text hover:bg-surface-2/60'
                           )}
                         >
                           <div className="flex items-center space-x-3 min-w-0 flex-1">
                             <span
                               className={cn(
-                                'p-1.5 rounded-lg shrink-0',
-                                isSelected ? 'bg-action/20 text-action' : 'bg-surface-2 text-text-muted'
+                                'p-1.5 rounded-md shrink-0',
+                                isSelected ? 'bg-emerald-950 text-emerald-400 border border-emerald-900/60' : 'bg-surface-2 text-text-muted'
                               )}
                             >
                               {item.icon}
@@ -233,7 +233,7 @@ export const CommandPalette: React.FC = () => {
             </span>
           </div>
 
-          <span>KiBANLY Search</span>
+          <span>OBOiFY Search</span>
         </div>
       </div>
     </div>

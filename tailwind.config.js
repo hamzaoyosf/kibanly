@@ -8,16 +8,22 @@ export default {
   theme: {
     extend: {
       colors: {
+        canvas: '#111827',
         bg: 'var(--bg)',
         'bg-elevated': 'var(--bg-elevated)',
         surface: 'var(--surface)',
         'surface-2': 'var(--surface-2)',
+        'surface-inset': 'var(--surface-inset)',
         border: 'var(--border)',
         'border-strong': 'var(--border-strong)',
         text: {
           DEFAULT: 'var(--text)',
           muted: 'var(--text-muted)',
           faint: 'var(--text-faint)',
+        },
+        semantic: {
+          done: 'var(--semantic-green)',
+          overdue: 'var(--semantic-red)',
         },
         action: {
           DEFAULT: 'var(--action)',
@@ -45,16 +51,13 @@ export default {
         mono: ['"JetBrains Mono"', '"IBM Plex Mono"', 'ui-monospace', 'monospace'],
       },
       borderRadius: {
-        card: '24px',
-        tile: '20px',
-        chip: '14px',
+        card: '12px',
+        tile: '10px',
+        chip: '6px',
       },
       boxShadow: {
         card: 'var(--shadow-card)',
-        'glow-action': 'var(--inner-glow-action)',
-        'glow-growth': 'var(--inner-glow-growth)',
-        'glow-capital': 'var(--inner-glow-capital)',
-        'glow-knowledge': 'var(--inner-glow-knowledge)',
+        'card-hover': 'var(--shadow-hover)',
       },
     },
   },

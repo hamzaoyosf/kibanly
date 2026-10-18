@@ -1,5 +1,8 @@
 import { Transaction, TransactionScope, SubscriptionCycle } from '@/data/ports/schemas'
 import { usePreferencesStore } from '@/app/store/preferencesStore'
+import { convertCurrency } from '@/features/capital/useExchangeRates'
+
+export { convertCurrency }
 
 /**
  * Formats integer minor units (e.g. cents) as a locale currency string.
@@ -45,23 +48,34 @@ export function parseMoneyToMinor(input: string): number {
 
 /**
  * Calculates net cash metrics from transactions filtered by scope.
+ * Optionally normalizes multi-currency transactions into a single target currency (e.g. user's defaultCurrency).
  */
 export function calculateNetCash(
   transactions: Transaction[],
-  scope: 'all' | TransactionScope | string = 'all'
+  scope: 'all' | TransactionScope | string = 'all',
+  targetCurrency?: string,
+  convertFn?: (amountMinor: number, fromCurrency: string, toCurrency: string) => number
 ) {
   const targetScope = (scope || 'all').toLowerCase()
   const filtered = targetScope === 'all'
     ? transactions
     : transactions.filter((t) => (t.scope || 'business').toLowerCase() === targetScope)
 
+  const toTarget = (amountMinor: number, currency?: string) => {
+    if (!targetCurrency || !currency || currency.toUpperCase() === targetCurrency.toUpperCase()) {
+      return amountMinor
+    }
+    const converter = convertFn || convertCurrency
+    return converter(amountMinor, currency, targetCurrency)
+  }
+
   const totalIncomeMinor = filtered
     .filter((t) => t.type === 'income')
-    .reduce((sum, t) => sum + t.amountMinor, 0)
+    .reduce((sum, t) => sum + toTarget(t.amountMinor, t.currency), 0)
 
   const totalExpenseMinor = filtered
     .filter((t) => t.type === 'expense')
-    .reduce((sum, t) => sum + t.amountMinor, 0)
+    .reduce((sum, t) => sum + toTarget(t.amountMinor, t.currency), 0)
 
   const netCashMinor = totalIncomeMinor - totalExpenseMinor
   const operatingMarginPercent = totalIncomeMinor > 0

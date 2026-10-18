@@ -3,7 +3,7 @@ import { AIWeeklyEnergyInsights, RecommendationItem } from './types'
 import { EnergyLog, Habit, HabitLog } from '@/data/ports/schemas'
 
 function getWeekCacheKey(weekKey: string): string {
-  return `kibanly_energy_insight_${weekKey}`
+  return `oboify_energy_insight_${weekKey}`
 }
 
 function cleanJsonResponse(rawText: string): string {
@@ -155,7 +155,7 @@ export async function generateWeeklyEnergyInsights(params: {
     },
   }
 
-  const prompt = `You are the KiBANLY OS Human Performance and Vitality Scientist.
+  const prompt = `You are the OBOiFY Human Performance and Vitality Scientist.
 Analyze the user's weekly personal performance logs and generate an executive weekly energy report:
 
 ${JSON.stringify(summaryData, null, 2)}

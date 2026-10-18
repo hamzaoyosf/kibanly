@@ -11,6 +11,8 @@ import {
 } from 'lucide-react'
 import { Transaction, TransactionScope, TransactionType } from '@/data/ports/schemas'
 import { useDeleteTransaction, useUpdateTransaction } from '../useTransactions'
+import { useExchangeRates } from '../useExchangeRates'
+import { usePreferencesStore } from '@/app/store/preferencesStore'
 import { formatMoney, parseMoneyToMinor } from '@/lib/money'
 import { cn } from '@/lib/utils'
 
@@ -25,6 +27,9 @@ export const RecentTransactionsList: React.FC<RecentTransactionsListProps> = ({
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('all')
   const [editingTxn, setEditingTxn] = useState<Transaction | null>(null)
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null)
+
+  const defaultCurrency = usePreferencesStore((s) => s.defaultCurrency) || 'USD'
+  const { convert } = useExchangeRates()
 
   const deleteMutation = useDeleteTransaction()
   const updateMutation = useUpdateTransaction()
@@ -155,16 +160,23 @@ export const RecentTransactionsList: React.FC<RecentTransactionsListProps> = ({
                 </div>
 
                 {/* Amount & Actions */}
-                <div className="flex items-center space-x-2 shrink-0 pl-3">
-                  <span
-                    className={cn(
-                      'text-sm font-bold font-mono',
-                      isIncome ? 'text-growth' : 'text-text'
+                <div className="flex items-center space-x-3 shrink-0 pl-3">
+                  <div className="text-right">
+                    <span
+                      className={cn(
+                        'text-sm font-bold font-mono block leading-tight',
+                        isIncome ? 'text-growth' : 'text-text'
+                      )}
+                    >
+                      {isIncome ? '+' : '-'}
+                      {formatMoney(txn.amountMinor, txn.currency)}
+                    </span>
+                    {txn.currency && txn.currency !== defaultCurrency && (
+                      <span className="text-[10px] font-mono text-text-muted block leading-tight mt-0.5">
+                        ~{formatMoney(convert(txn.amountMinor, txn.currency, defaultCurrency), defaultCurrency)}
+                      </span>
                     )}
-                  >
-                    {isIncome ? '+' : '-'}
-                    {formatMoney(txn.amountMinor, txn.currency)}
-                  </span>
+                  </div>
 
                   {/* Options Menu */}
                   <div className="relative">

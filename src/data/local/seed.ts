@@ -61,7 +61,7 @@ export const seedInboxItems: InboxItem[] = [
 export const seedTasks: Task[] = [
   {
     id: 'tsk_seed_01',
-    title: 'Deploy KiBANLY Phase 0 Foundations',
+    title: 'Deploy OBOiFY Phase 0 Foundations',
     notes: 'Verify design tokens and dark OLED theme',
     status: 'done',
     gtdList: 'next',
@@ -92,13 +92,13 @@ const todayStr = new Date().toISOString().slice(0, 10)
 export const seedTimeBlocks: TimeBlock[] = [
   {
     id: 'blk_seed_01',
-    title: 'Deep work: KiBANLY Kanban',
+    title: 'Deep work: OBOiFY Kanban',
     category: 'deep_work',
     color: 'cyan',
     start: `${todayStr}T09:00:00.000Z`,
     end: `${todayStr}T10:30:00.000Z`,
     taskId: 'tsk_seed_01',
-    source: 'KiBANLY',
+    source: 'OBOiFY',
     gcal: null,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),

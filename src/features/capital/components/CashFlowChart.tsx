@@ -10,6 +10,9 @@ import {
 } from 'recharts'
 import { LineChart as ChartIcon, Table, BarChart2 } from 'lucide-react'
 import { Transaction, TransactionScope } from '@/data/ports/schemas'
+import { usePreferencesStore } from '@/app/store/preferencesStore'
+import { useExchangeRates } from '../useExchangeRates'
+import { formatMoney } from '@/lib/money'
 import { cn } from '@/lib/utils'
 
 interface CashFlowChartProps {
@@ -25,7 +28,7 @@ interface CashFlowDataPoint {
   net: number
 }
 
-const CustomCashFlowTooltip = ({ active, payload }: any) => {
+const CustomCashFlowTooltip = ({ active, payload, defaultCurrency }: any) => {
   if (active && payload && payload.length && payload[0]?.payload) {
     const data: CashFlowDataPoint = payload[0].payload
     return (
@@ -33,16 +36,16 @@ const CustomCashFlowTooltip = ({ active, payload }: any) => {
         <p className="font-semibold text-text">{data.fullDate || 'Date'}</p>
         <p className="text-growth flex justify-between space-x-3">
           <span>Inflow:</span>
-          <span>${(data.income ?? 0).toFixed(2)}</span>
+          <span>{formatMoney(Math.round(data.income * 100), defaultCurrency)}</span>
         </p>
         <p className="text-danger flex justify-between space-x-3">
           <span>Outflow:</span>
-          <span>${(data.expense ?? 0).toFixed(2)}</span>
+          <span>{formatMoney(Math.round(data.expense * 100), defaultCurrency)}</span>
         </p>
         <div className="border-t border-[rgba(255,255,255,0.08)] pt-1 flex justify-between space-x-3 text-text font-bold">
           <span>Net:</span>
           <span className={(data.net ?? 0) >= 0 ? 'text-capital' : 'text-danger'}>
-            ${(data.net ?? 0).toFixed(2)}
+            {formatMoney(Math.round(data.net * 100), defaultCurrency)}
           </span>
         </div>
       </div>
@@ -56,6 +59,8 @@ export const CashFlowChart: React.FC<CashFlowChartProps> = ({
   selectedScope,
 }) => {
   const [showTableView, setShowTableView] = useState(false)
+  const defaultCurrency = usePreferencesStore((s) => s.defaultCurrency) || 'USD'
+  const { convert } = useExchangeRates()
 
   // Filter transactions by selected scope (case-insensitive & defensively handled)
   const filtered = useMemo(() => {
@@ -74,7 +79,7 @@ export const CashFlowChart: React.FC<CashFlowChartProps> = ({
     )
   }, [transactions, selectedScope])
 
-  // Aggregate daily transactions into sorted timeline series
+  // Aggregate daily transactions into sorted timeline series normalized to defaultCurrency
   const chartData: CashFlowDataPoint[] = useMemo(() => {
     if (!filtered || filtered.length === 0) return []
 
@@ -86,10 +91,11 @@ export const CashFlowChart: React.FC<CashFlowChartProps> = ({
         map.set(dateKey, { incomeMinor: 0, expenseMinor: 0 })
       }
       const entry = map.get(dateKey)!
+      const amountConverted = convert(t.amountMinor || 0, t.currency || 'USD', defaultCurrency)
       if (t.type === 'income') {
-        entry.incomeMinor += t.amountMinor || 0
+        entry.incomeMinor += amountConverted
       } else {
-        entry.expenseMinor += t.amountMinor || 0
+        entry.expenseMinor += amountConverted
       }
     })
 
@@ -109,7 +115,7 @@ export const CashFlowChart: React.FC<CashFlowChartProps> = ({
         net,
       }
     })
-  }, [filtered])
+  }, [filtered, defaultCurrency, convert])
 
   return (
     <div className="card p-5 bg-surface/50 border border-[rgba(255,255,255,0.06)] flex flex-col space-y-4">
@@ -147,24 +153,28 @@ export const CashFlowChart: React.FC<CashFlowChartProps> = ({
             <thead>
               <tr className="border-b border-[rgba(255,255,255,0.06)] text-text-muted">
                 <th className="py-2 px-3">Date</th>
-                <th className="py-2 px-3 text-right">Inflow ($)</th>
-                <th className="py-2 px-3 text-right">Outflow ($)</th>
-                <th className="py-2 px-3 text-right">Net Flow ($)</th>
+                <th className="py-2 px-3 text-right">Inflow ({defaultCurrency})</th>
+                <th className="py-2 px-3 text-right">Outflow ({defaultCurrency})</th>
+                <th className="py-2 px-3 text-right">Net Flow ({defaultCurrency})</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[rgba(255,255,255,0.04)]">
               {chartData.map((d) => (
                 <tr key={d.fullDate} className="hover:bg-surface-2/40">
                   <td className="py-2 px-3 font-semibold text-text">{d.fullDate}</td>
-                  <td className="py-2 px-3 text-right text-growth">${d.income.toFixed(2)}</td>
-                  <td className="py-2 px-3 text-right text-danger">${d.expense.toFixed(2)}</td>
+                  <td className="py-2 px-3 text-right text-growth">
+                    {formatMoney(Math.round(d.income * 100), defaultCurrency)}
+                  </td>
+                  <td className="py-2 px-3 text-right text-danger">
+                    {formatMoney(Math.round(d.expense * 100), defaultCurrency)}
+                  </td>
                   <td
                     className={cn(
                       'py-2 px-3 text-right font-bold',
                       d.net >= 0 ? 'text-capital' : 'text-danger'
                     )}
                   >
-                    ${d.net.toFixed(2)}
+                    {formatMoney(Math.round(d.net * 100), defaultCurrency)}
                   </td>
                 </tr>
               ))}
@@ -200,9 +210,9 @@ export const CashFlowChart: React.FC<CashFlowChartProps> = ({
                 <YAxis
                   tick={{ fill: '#6B6B76', fontSize: 10, fontFamily: 'monospace' }}
                   stroke="rgba(255, 255, 255, 0.08)"
-                  tickFormatter={(val) => `$${val}`}
+                  tickFormatter={(val) => `${val}`}
                 />
-                <Tooltip content={<CustomCashFlowTooltip />} />
+                <Tooltip content={<CustomCashFlowTooltip defaultCurrency={defaultCurrency} />} />
                 {/* Income: Solid line with amber fill */}
                 <Area
                   type="monotone"

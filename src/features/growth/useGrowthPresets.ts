@@ -5,7 +5,8 @@ import { GrowthPreset } from './types/presets'
 import { ENERGY_LOGS_QUERY_KEY } from './useEnergyLogs'
 import { HABIT_LOGS_QUERY_KEY } from './useHabits'
 
-const CUSTOM_PRESETS_STORAGE_KEY = 'kibanly_custom_growth_presets'
+const CUSTOM_PRESETS_STORAGE_KEY = 'oboify_custom_growth_presets'
+const LEGACY_PRESETS_STORAGE_KEY = 'kibanly_custom_growth_presets'
 
 export const BUILT_IN_PRESETS: GrowthPreset[] = [
   // Workouts
@@ -131,7 +132,7 @@ export const BUILT_IN_PRESETS: GrowthPreset[] = [
 export function useGrowthPresets() {
   const [customPresets, setCustomPresets] = useState<GrowthPreset[]>(() => {
     try {
-      const stored = localStorage.getItem(CUSTOM_PRESETS_STORAGE_KEY)
+      const stored = localStorage.getItem(CUSTOM_PRESETS_STORAGE_KEY) || localStorage.getItem(LEGACY_PRESETS_STORAGE_KEY)
       return stored ? JSON.parse(stored) : []
     } catch {
       return []

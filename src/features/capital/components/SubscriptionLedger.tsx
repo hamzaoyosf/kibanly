@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useRef, useEffect } from 'react'
 import {
   CreditCard,
   Plus,
@@ -8,6 +8,7 @@ import {
   X,
   Clock,
   Sparkles,
+  MoreVertical,
 } from 'lucide-react'
 import {
   Subscription,
@@ -26,6 +27,8 @@ import {
   calculateMonthlyEquivalent,
   parseMoneyToMinor,
 } from '@/lib/money'
+import { usePreferencesStore } from '@/app/store/preferencesStore'
+import { useExchangeRates } from '../useExchangeRates'
 import { cn } from '@/lib/utils'
 
 interface SubscriptionLedgerProps {
@@ -41,21 +44,128 @@ function getDaysUntil(dateStr: string): number {
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
 }
 
+interface SubscriptionActionsMenuProps {
+  onEdit: () => void
+  onDelete: () => void
+}
+
+const SubscriptionActionsMenu: React.FC<SubscriptionActionsMenuProps> = ({
+  onEdit,
+  onDelete,
+}) => {
+  const [isOpen, setIsOpen] = useState(false)
+  const [openUpward, setOpenUpward] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!isOpen) return
+    if (menuRef.current) {
+      const rect = menuRef.current.getBoundingClientRect()
+      if (window.innerHeight - rect.bottom < 110) {
+        setOpenUpward(true)
+      } else {
+        setOpenUpward(false)
+      }
+    }
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsOpen(false)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isOpen])
+
+  return (
+    <div
+      className="relative shrink-0"
+      ref={menuRef}
+      onMouseLeave={() => setIsOpen(false)}
+    >
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation()
+          setIsOpen((prev) => !prev)
+        }}
+        className={cn(
+          'p-1.5 rounded-lg text-text-muted hover:text-text hover:bg-surface transition-colors',
+          isOpen && 'bg-surface text-text'
+        )}
+        aria-label="More options"
+        title="More options"
+        aria-expanded={isOpen}
+      >
+        <MoreVertical className="w-4 h-4" />
+      </button>
+
+      {isOpen && (
+        <div
+          className={cn(
+            'absolute right-0 z-30 w-28 py-1 rounded-lg bg-surface border border-border shadow-2xl animate-in fade-in zoom-in-95 duration-100',
+            openUpward ? 'bottom-full mb-1' : 'top-full mt-1'
+          )}
+          role="menu"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            type="button"
+            onClick={() => {
+              setIsOpen(false)
+              onEdit()
+            }}
+            className="w-full flex items-center space-x-2 px-3 py-1.5 text-xs text-text hover:bg-surface-2 transition-colors text-left"
+            role="menuitem"
+          >
+            <Pencil className="w-3.5 h-3.5 text-text-muted" />
+            <span>Edit</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setIsOpen(false)
+              onDelete()
+            }}
+            className="w-full flex items-center space-x-2 px-3 py-1.5 text-xs text-red-400 hover:bg-red-500/10 transition-colors text-left"
+            role="menuitem"
+          >
+            <Trash2 className="w-3.5 h-3.5 text-red-400" />
+            <span>Delete</span>
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export const SubscriptionLedger: React.FC<SubscriptionLedgerProps> = ({
   selectedScope,
 }) => {
   const { data: subscriptions = [], isLoading } = useSubscriptions(selectedScope)
+  const defaultCurrency = usePreferencesStore((s) => s.defaultCurrency) || 'USD'
+  const { convert } = useExchangeRates()
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [editingSub, setEditingSub] = useState<Subscription | null>(null)
   const deleteMutation = useDeleteSubscription()
   const updateMutation = useUpdateSubscription()
 
-  // Monthly burn calculation
+  // Monthly burn calculation normalized to defaultCurrency using live/cached exchange rates
   const totalMonthlyRunRateMinor = useMemo(() => {
     return subscriptions
       .filter((s) => s.status === 'active')
-      .reduce((sum, s) => sum + calculateMonthlyEquivalent(s.amountMinor, s.cycle), 0)
-  }, [subscriptions])
+      .reduce((sum, s) => {
+        const monthly = calculateMonthlyEquivalent(s.amountMinor, s.cycle)
+        return sum + convert(monthly, s.currency || 'USD', defaultCurrency)
+      }, 0)
+  }, [subscriptions, defaultCurrency, convert])
 
   const handleDelete = (id: string) => {
     if (confirm('Cancel / delete this subscription record?')) {
@@ -66,26 +176,28 @@ export const SubscriptionLedger: React.FC<SubscriptionLedgerProps> = ({
   return (
     <div className="card p-5 bg-surface/50 border border-[rgba(255,255,255,0.06)] flex flex-col space-y-4">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[rgba(255,255,255,0.06)]">
-        <div>
+      <div className="flex flex-wrap items-center justify-between gap-2.5 sm:gap-3 pb-3 border-b border-border max-w-full">
+        <div className="min-w-0">
           <div className="flex items-center space-x-2">
-            <CreditCard className="w-5 h-5 text-capital" />
+            <span className="p-1.5 rounded-lg bg-surface-2 text-amber-400 border border-border">
+              <CreditCard className="w-4 h-4" />
+            </span>
             <h2 className="text-base font-semibold text-text">Subscription Ledger</h2>
-            <span className="px-2 py-0.5 rounded-full text-xs font-mono font-semibold bg-capital/15 text-capital border border-capital/30">
+            <span className="px-2 py-0.5 rounded-full text-xs font-mono font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30">
               {subscriptions.length} active
             </span>
           </div>
-          <p className="text-xs text-text-faint mt-1">
-            Recurring commitments with renewal countdowns and run-rate projections
+          <p className="text-xs text-text-muted mt-1 truncate">
+            Recurring commitments with renewal countdowns
           </p>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 max-w-full">
           {/* Monthly Run Rate Pill */}
-          <div className="px-3 py-1.5 rounded-xl bg-surface-2 border border-[rgba(255,255,255,0.06)] flex items-center space-x-2 text-xs font-mono">
-            <span className="text-text-faint text-[11px]">Monthly Burn:</span>
-            <span className="font-bold text-capital">
-              {formatMoney(totalMonthlyRunRateMinor)}/mo
+          <div className="px-2.5 py-1.5 rounded-lg bg-surface-2 border border-border flex items-center space-x-1.5 text-xs font-mono shrink-0">
+            <span className="text-text-muted text-[11px]">Monthly Burn:</span>
+            <span className="font-bold text-amber-400">
+              {formatMoney(totalMonthlyRunRateMinor, defaultCurrency)}/mo
             </span>
           </div>
 
@@ -93,75 +205,81 @@ export const SubscriptionLedger: React.FC<SubscriptionLedgerProps> = ({
             type="button"
             onClick={() => setIsAddModalOpen(true)}
             className={cn(
-              'flex items-center space-x-1.5 px-3 py-1.5 rounded-chip font-semibold text-xs',
-              'bg-capital text-black hover:brightness-110 active:scale-95 transition-all shadow-sm'
+              'flex items-center space-x-1.5 px-3 py-1.5 rounded-chip font-bold text-xs shrink-0',
+              'bg-amber-400 hover:bg-amber-300 text-gray-950 active:scale-95 transition-all shadow-sm'
             )}
           >
-            <Plus className="w-4 h-4 stroke-[2.5]" />
+            <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
             <span>Add Sub</span>
           </button>
         </div>
       </div>
 
       {/* Subscriptions Table / List */}
-      <div className="overflow-x-auto">
+      <div>
         {isLoading ? (
           <div className="h-40 rounded-xl animate-pulse bg-surface-2/40" />
         ) : subscriptions.length === 0 ? (
-          <div className="p-8 text-center text-xs text-text-faint border border-dashed border-[rgba(255,255,255,0.08)] rounded-tile">
+          <div className="p-8 text-center text-xs text-text-muted border border-dashed border-border rounded-tile">
             No active subscriptions in this scope.
           </div>
         ) : (
-          <div className="divide-y divide-[rgba(255,255,255,0.04)]">
+          <div className="space-y-3">
             {subscriptions.map((sub) => {
               const daysUntil = getDaysUntil(sub.nextRenewal)
               const isUrgent = daysUntil >= 0 && daysUntil <= 3
               return (
                 <div
                   key={sub.id}
-                  className="flex items-center justify-between py-3 px-1.5 hover:bg-surface-2/30 rounded-lg transition-colors group"
+                  className="relative flex flex-col gap-y-3 p-3.5 sm:p-4 rounded-lg bg-surface-2/40 hover:bg-surface-2/70 border border-border/80 hover:border-gray-600 transition-all group shadow-sm"
                 >
-                  <div className="flex items-center space-x-3 min-w-0 flex-1">
-                    <div className="p-2 rounded-xl bg-surface-2 border border-[rgba(255,255,255,0.06)] text-capital shrink-0">
+                  {/* Top Row: Icon + Title + External Link */}
+                  <div className="flex items-center space-x-2.5">
+                    <div className="p-2 rounded-lg bg-surface-2 border border-border text-amber-400 shrink-0">
                       <CreditCard className="w-4 h-4" />
                     </div>
-
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center space-x-2">
-                        <p className="text-sm font-semibold text-text truncate">{sub.name}</p>
-                        {sub.url && (
-                          <a
-                            href={sub.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-text-faint hover:text-capital transition-colors"
-                          >
-                            <ExternalLink className="w-3 h-3" />
-                          </a>
-                        )}
-                      </div>
-
-                      <div className="flex items-center space-x-2 mt-1 text-[10px] font-mono">
-                        <span className="capitalize text-text-muted">{sub.cycle}</span>
-                        <span className="text-text-faint">•</span>
-                        <span className="px-1.5 py-0.2 rounded bg-surface-2 border border-[rgba(255,255,255,0.06)] text-text-muted capitalize">
-                          {sub.category}
-                        </span>
-                        <span className="capitalize text-text-faint">{sub.scope}</span>
-                      </div>
+                    <div className="flex items-center space-x-1.5 min-w-0 flex-1">
+                      <h3 className="text-sm font-semibold text-text whitespace-normal break-words leading-snug">
+                        {sub.name}
+                      </h3>
+                      {sub.url && (
+                        <a
+                          href={sub.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-text-muted hover:text-amber-400 transition-colors shrink-0"
+                          title="Open website"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </a>
+                      )}
                     </div>
                   </div>
 
-                  <div className="flex items-center space-x-3 shrink-0 pl-3">
-                    {/* Renewal Countdown Badge */}
+                  {/* Middle Row: Frequency • Category Badge • Type */}
+                  <div className="flex flex-wrap items-center gap-1.5 text-xs font-mono text-text-muted">
+                    <span className="capitalize">{sub.cycle}</span>
+                    <span className="text-text-muted/40">•</span>
+                    <span className="px-1.5 py-0.5 rounded bg-surface border border-border text-text-muted text-[11px] capitalize">
+                      {sub.category}
+                    </span>
+                    <span className="text-text-muted/40">•</span>
+                    <span className="capitalize text-text-muted/70">
+                      {sub.scope}
+                    </span>
+                  </div>
+
+                  {/* Bottom Row: Renewal Countdown (Left) | Price + 3-Dot Action Menu (Right) */}
+                  <div className="flex items-center justify-between gap-3 pt-1 border-t border-border/30">
+                    {/* Left side: Renewal Countdown Badge */}
                     <div
                       className={cn(
-                        'flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-mono font-semibold border',
+                        'flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold border shrink-0',
                         isUrgent
-                          ? 'bg-danger/15 text-danger border-danger/40 shadow-[0_0_8px_rgba(251,113,133,0.2)]'
+                          ? 'bg-red-500/15 text-red-400 border-red-500/40 shadow-sm'
                           : daysUntil < 0
-                          ? 'bg-surface-2 text-text-faint border-[rgba(255,255,255,0.06)]'
-                          : 'bg-capital/10 text-capital border-capital/20'
+                          ? 'bg-surface-2 text-text-muted border-border'
+                          : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
                       )}
                     >
                       <Clock className="w-3 h-3" />
@@ -174,35 +292,31 @@ export const SubscriptionLedger: React.FC<SubscriptionLedgerProps> = ({
                       </span>
                     </div>
 
-                    {/* Amount */}
-                    <div className="text-right">
-                      <p className="text-sm font-bold font-mono text-text">
-                        {formatMoney(sub.amountMinor, sub.currency)}
-                      </p>
-                      <p className="text-[10px] font-mono text-text-faint">
-                        ~{formatMoney(calculateMonthlyEquivalent(sub.amountMinor, sub.cycle))}/mo
-                      </p>
+                    {/* Right side: Price Block (USD top, MAD bottom) + 3-Dot Action Menu */}
+                    <div className="flex items-center space-x-3 shrink-0">
+                      <div className="text-right">
+                        <p className="text-xs sm:text-sm font-bold font-mono text-text leading-tight">
+                          {formatMoney(sub.amountMinor, sub.currency)}
+                        </p>
+                        <p className="text-[10px] sm:text-[11px] font-mono text-text-muted leading-tight mt-0.5">
+                          {sub.currency !== defaultCurrency
+                            ? `~${formatMoney(
+                                convert(
+                                  calculateMonthlyEquivalent(sub.amountMinor, sub.cycle),
+                                  sub.currency,
+                                  defaultCurrency
+                                ),
+                                defaultCurrency
+                              )}`
+                            : `~${formatMoney(calculateMonthlyEquivalent(sub.amountMinor, sub.cycle), sub.currency)}/mo`}
+                        </p>
+                      </div>
+
+                      <SubscriptionActionsMenu
+                        onEdit={() => setEditingSub(sub)}
+                        onDelete={() => handleDelete(sub.id)}
+                      />
                     </div>
-
-                    {/* Edit action */}
-                    <button
-                      type="button"
-                      onClick={() => setEditingSub(sub)}
-                      className="p-1 rounded-lg text-text-faint hover:text-capital hover:bg-capital/10 transition-colors opacity-0 group-hover:opacity-100"
-                      title="Edit subscription"
-                    >
-                      <Pencil className="w-3.5 h-3.5" />
-                    </button>
-
-                    {/* Delete action */}
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(sub.id)}
-                      className="p-1 rounded-lg text-text-faint hover:text-danger hover:bg-danger/10 transition-colors opacity-0 group-hover:opacity-100"
-                      title="Delete subscription"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
                   </div>
                 </div>
               )

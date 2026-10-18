@@ -103,7 +103,7 @@ export const GeminiConfigModal: React.FC<GeminiConfigModalProps> = ({
                 ? `Using Google GenAI (gemini-1.5-flash). ${
                     isEnvConfigured ? 'Supplied via .env.local file.' : 'Custom key saved in browser storage.'
                   }`
-                : 'Without an API key, KiBANLY runs its offline heuristic parser. Connect your free Google AI Studio key below for high-fidelity reasoning.'}
+                : 'Without an API key, OBOiFY runs its offline heuristic parser. Connect your free Google AI Studio key below for high-fidelity reasoning.'}
             </p>
           </div>
         </div>

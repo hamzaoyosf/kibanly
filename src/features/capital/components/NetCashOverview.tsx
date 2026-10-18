@@ -2,6 +2,8 @@ import React, { useMemo } from 'react'
 import { Wallet, TrendingUp, TrendingDown, Layers, ShieldCheck } from 'lucide-react'
 import { Transaction, TransactionScope } from '@/data/ports/schemas'
 import { calculateNetCash, formatMoney, calculateMonthlyEquivalent } from '@/lib/money'
+import { usePreferencesStore } from '@/app/store/preferencesStore'
+import { useExchangeRates } from '../useExchangeRates'
 import { useSubscriptions } from '../useSubscriptions'
 import { useMilestones } from '../useMilestones'
 import { cn } from '@/lib/utils'
@@ -19,20 +21,25 @@ export const NetCashOverview: React.FC<NetCashOverviewProps> = ({
 }) => {
   const { data: subscriptions = [] } = useSubscriptions(selectedScope as any)
   const { data: milestones = [] } = useMilestones()
+  const defaultCurrency = usePreferencesStore((s) => s.defaultCurrency) || 'USD'
+  const { convert, getRate, isFetching } = useExchangeRates()
 
   const { totalIncomeMinor, totalExpenseMinor, netCashMinor, operatingMarginPercent } =
-    calculateNetCash(transactions, selectedScope)
+    calculateNetCash(transactions, selectedScope, defaultCurrency, convert)
 
   const isPositiveNet = netCashMinor >= 0
 
-  // Total monthly subscriptions burn for active subscriptions in current scope
+  // Total monthly subscriptions burn for active subscriptions in current scope normalized to defaultCurrency
   const monthlySubscriptionBurnMinor = useMemo(() => {
     return subscriptions
       .filter((s) => s.status === 'active')
-      .reduce((sum, s) => sum + calculateMonthlyEquivalent(s.amountMinor, s.cycle), 0)
-  }, [subscriptions])
+      .reduce((sum, s) => {
+        const monthly = calculateMonthlyEquivalent(s.amountMinor, s.cycle)
+        return sum + convert(monthly, s.currency || 'USD', defaultCurrency)
+      }, 0)
+  }, [subscriptions, defaultCurrency, convert])
 
-  // Total currently saved in milestones in current scope
+  // Total currently saved in milestones in current scope normalized to defaultCurrency
   const milestonesSavedMinor = useMemo(() => {
     const targetScope = (selectedScope || 'all').toLowerCase()
     return milestones
@@ -41,8 +48,10 @@ export const NetCashOverview: React.FC<NetCashOverviewProps> = ({
           targetScope === 'all' ||
           (m.scope || 'personal').toLowerCase() === targetScope
       )
-      .reduce((sum, m) => sum + (m.currentMinor || 0), 0)
-  }, [milestones, selectedScope])
+      .reduce((sum, m) => {
+        return sum + convert(m.currentMinor || 0, m.currency || 'USD', defaultCurrency)
+      }, 0)
+  }, [milestones, selectedScope, defaultCurrency, convert])
 
   // Safe to Spend = (Net Cash) - (Total Monthly Subscriptions Burn) - (Total Current Saved in Milestones)
   const safeToSpendMinor =
@@ -82,8 +91,17 @@ export const NetCashOverview: React.FC<NetCashOverviewProps> = ({
           })}
         </div>
 
-        {/* Operating Margin Pill */}
-        <div className="hidden sm:flex items-center space-x-2 text-xs font-mono">
+        {/* Right Header Badges: Dynamic FX Rate & Operating Margin */}
+        <div className="hidden sm:flex items-center space-x-2.5 text-xs font-mono">
+          {defaultCurrency !== 'USD' && (
+            <div
+              className="flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-surface-2 border border-border text-[11px] text-text-muted"
+              title={`Live FX Rate: 1 USD = ${getRate('USD', defaultCurrency).toFixed(2)} ${defaultCurrency}`}
+            >
+              <span className={cn('w-1.5 h-1.5 rounded-full', isFetching ? 'bg-amber-400 animate-pulse' : 'bg-emerald-400')} />
+              <span>1 USD ≈ {getRate('USD', defaultCurrency).toFixed(2)} {defaultCurrency}</span>
+            </div>
+          )}
           <span className="text-text-faint text-[11px]">Net Margin:</span>
           <span
             className={cn(
@@ -115,7 +133,7 @@ export const NetCashOverview: React.FC<NetCashOverviewProps> = ({
                     isPositiveNet ? 'text-capital' : 'text-danger'
                   )}
                 >
-                  {formatMoney(netCashMinor)}
+                  {formatMoney(netCashMinor, defaultCurrency)}
                 </p>
               </div>
             </div>
@@ -156,7 +174,7 @@ export const NetCashOverview: React.FC<NetCashOverviewProps> = ({
                   isSafePositive ? 'text-growth' : 'text-danger'
                 )}
               >
-                {formatMoney(safeToSpendMinor)}
+                {formatMoney(safeToSpendMinor, defaultCurrency)}
               </span>
               <p className="text-[9px] font-mono text-text-muted">
                 {isSafePositive ? 'True liquidity' : 'Deficit risk'}
@@ -175,7 +193,7 @@ export const NetCashOverview: React.FC<NetCashOverviewProps> = ({
               <div>
                 <p className="text-[11px] font-mono text-text-muted">Total Inflows</p>
                 <p className="text-xl sm:text-2xl font-bold font-mono text-growth tracking-tight mt-0.5">
-                  {formatMoney(totalIncomeMinor)}
+                  {formatMoney(totalIncomeMinor, defaultCurrency)}
                 </p>
               </div>
             </div>
@@ -202,7 +220,7 @@ export const NetCashOverview: React.FC<NetCashOverviewProps> = ({
               <div>
                 <p className="text-[11px] font-mono text-text-muted">Total Outflows</p>
                 <p className="text-xl sm:text-2xl font-bold font-mono text-danger tracking-tight mt-0.5">
-                  {formatMoney(totalExpenseMinor)}
+                  {formatMoney(totalExpenseMinor, defaultCurrency)}
                 </p>
               </div>
             </div>
@@ -214,7 +232,7 @@ export const NetCashOverview: React.FC<NetCashOverviewProps> = ({
           <div className="pt-2.5 border-t border-[rgba(255,255,255,0.06)] flex items-center justify-between text-[11px] font-mono">
             <span className="text-text-faint">Monthly Sub Burn:</span>
             <span className="font-bold text-capital">
-              {formatMoney(monthlySubscriptionBurnMinor)}/mo
+              {formatMoney(monthlySubscriptionBurnMinor, defaultCurrency)}/mo
             </span>
           </div>
         </div>

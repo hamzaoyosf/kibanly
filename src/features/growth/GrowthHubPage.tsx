@@ -38,20 +38,26 @@ export const GrowthHubPage: React.FC = () => {
     setSelectedDateObj(new Date())
   }
 
-  const formattedDate = selectedDateObj.toLocaleDateString(undefined, {
-    weekday: 'long',
-    month: 'long',
+  const formattedDateMobile = selectedDateObj.toLocaleDateString(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  })
+
+  const formattedDateDesktop = selectedDateObj.toLocaleDateString(undefined, {
+    weekday: 'short',
+    month: 'short',
     day: 'numeric',
     year: 'numeric',
   })
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto py-2" data-hub="growth">
+    <div className="space-y-6 max-w-7xl mx-auto py-2 w-full max-w-full overflow-x-hidden" data-hub="growth">
       {/* Top Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[rgba(255,255,255,0.06)]">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-border">
         <div>
           <div className="flex items-center space-x-2.5">
-            <span className="p-2 rounded-xl bg-growth/10 text-growth">
+            <span className="p-2 rounded-xl bg-surface-2 text-emerald-400 border border-border">
               <TrendingUp className="w-5 h-5" />
             </span>
             <h1 className="text-2xl font-bold tracking-tight text-text">
@@ -64,59 +70,62 @@ export const GrowthHubPage: React.FC = () => {
         </div>
 
         {/* Header Controls: Date Navigation & Presets Modal Trigger */}
-        <div className="flex flex-wrap items-center gap-2.5 self-start md:self-auto">
+        <div className="flex flex-wrap items-center gap-2 max-w-full w-full sm:w-auto">
           <button
             type="button"
             onClick={() => setIsPresetsOpen(true)}
-            className="flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-growth/10 hover:bg-growth/20 border border-growth/30 text-growth text-xs font-semibold font-mono transition-all shadow-sm"
+            className="flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-surface-2 hover:bg-surface-3 border border-border text-emerald-400 text-xs font-semibold font-mono transition-all shadow-sm shrink-0"
           >
             <Sparkles className="w-3.5 h-3.5" />
             <span>Presets & Routines</span>
           </button>
 
-          <div className="flex items-center space-x-2 p-1.5 rounded-xl bg-surface-2 border border-[rgba(255,255,255,0.06)]">
+          <div className="flex items-center justify-between space-x-1 sm:space-x-1.5 p-1 sm:p-1.5 rounded-xl bg-surface-2 border border-border max-w-full overflow-hidden">
             <button
               type="button"
               onClick={handlePrevDay}
-              className="p-1.5 rounded-lg border border-[rgba(255,255,255,0.06)] bg-surface text-text-muted hover:text-text hover:bg-surface-2 transition-colors"
+              className="p-1.5 rounded-lg border border-border bg-surface text-text-muted hover:text-text hover:bg-surface-2 transition-colors shrink-0"
               title="Previous day"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
 
-            <div className="flex items-center space-x-2 px-2">
-              <CalendarIcon className="w-4 h-4 text-growth" />
-              <span className="font-mono text-xs font-semibold text-text whitespace-nowrap">
-                {formattedDate}
+            <div className="flex items-center space-x-1.5 px-1 sm:px-2 min-w-0">
+              <CalendarIcon className="w-3.5 h-3.5 text-emerald-400 shrink-0 hidden xs:inline-block" />
+              <span className="font-mono text-[11px] sm:text-xs font-semibold text-text truncate">
+                <span className="sm:hidden">{formattedDateMobile}</span>
+                <span className="hidden sm:inline">{formattedDateDesktop}</span>
               </span>
               {isToday && (
-                <span className="text-[10px] font-mono text-growth uppercase font-semibold px-1.5 py-0.2 rounded bg-growth/10 border border-growth/30">
+                <span className="text-[9px] sm:text-[10px] font-mono text-emerald-400 uppercase font-semibold px-1 py-0.2 rounded bg-emerald-500/10 border border-emerald-500/30 shrink-0">
                   Today
                 </span>
               )}
             </div>
 
-            <button
-              type="button"
-              onClick={handleToday}
-              className={cn(
-                'px-2.5 py-1 rounded-lg text-xs font-semibold font-mono border transition-all',
-                isToday
-                  ? 'bg-growth/20 text-growth border-growth/40'
-                  : 'bg-surface text-text-muted border-[rgba(255,255,255,0.06)] hover:text-text'
-              )}
-            >
-              Today
-            </button>
+            <div className="flex items-center space-x-1 shrink-0">
+              <button
+                type="button"
+                onClick={handleToday}
+                className={cn(
+                  'px-2 py-1 rounded-lg text-[11px] sm:text-xs font-semibold font-mono border transition-all shrink-0',
+                  isToday
+                    ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
+                    : 'bg-surface text-text-muted border-border hover:text-text'
+                )}
+              >
+                Today
+              </button>
 
-            <button
-              type="button"
-              onClick={handleNextDay}
-              className="p-1.5 rounded-lg border border-[rgba(255,255,255,0.06)] bg-surface text-text-muted hover:text-text hover:bg-surface-2 transition-colors"
-              title="Next day"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
+              <button
+                type="button"
+                onClick={handleNextDay}
+                className="p-1.5 rounded-lg border border-border bg-surface text-text-muted hover:text-text hover:bg-surface-2 transition-colors shrink-0"
+                title="Next day"
+              >
+                <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              </button>
+            </div>
           </div>
         </div>
       </div>

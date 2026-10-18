@@ -23,8 +23,14 @@ export class LocalStorageRepo<T extends { id: string; createdAt: string; schemaV
     // Initialize with seed data if key does not exist yet
     if (typeof window !== 'undefined' && window.localStorage) {
       const existing = window.localStorage.getItem(this.storageKey)
-      if (!existing && initialData.length > 0) {
-        window.localStorage.setItem(this.storageKey, JSON.stringify(initialData))
+      if (!existing) {
+        const legacyKey = this.storageKey.replace('OBOiFY:', 'KiBANLY:')
+        const legacyData = window.localStorage.getItem(legacyKey)
+        if (legacyData) {
+          window.localStorage.setItem(this.storageKey, legacyData)
+        } else if (initialData.length > 0) {
+          window.localStorage.setItem(this.storageKey, JSON.stringify(initialData))
+        }
       }
 
       // Listen for changes from other tabs

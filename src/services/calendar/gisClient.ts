@@ -1,7 +1,9 @@
 import { CalendarToken } from './types'
 
-const TOKEN_STORAGE_KEY = 'kibanly_gcal_token'
-const CLIENT_ID_STORAGE_KEY = 'kibanly_google_client_id'
+const TOKEN_STORAGE_KEY = 'oboify_gcal_token'
+const LEGACY_TOKEN_STORAGE_KEY = 'kibanly_gcal_token'
+const CLIENT_ID_STORAGE_KEY = 'oboify_google_client_id'
+const LEGACY_CLIENT_ID_STORAGE_KEY = 'kibanly_google_client_id'
 export const CALENDAR_SCOPE = 'https://www.googleapis.com/auth/calendar.events'
 
 declare global {
@@ -45,7 +47,7 @@ export function getGoogleClientId(): string | null {
   }
 
   if (typeof window !== 'undefined') {
-    const localId = localStorage.getItem(CLIENT_ID_STORAGE_KEY)
+    const localId = localStorage.getItem(CLIENT_ID_STORAGE_KEY) || localStorage.getItem(LEGACY_CLIENT_ID_STORAGE_KEY)
     if (localId && localId.trim().length > 10) {
       return localId.trim()
     }
@@ -78,7 +80,7 @@ export function isCalendarConfigured(): boolean {
  */
 export function getCalendarToken(): CalendarToken | null {
   if (typeof window === 'undefined') return null
-  const stored = localStorage.getItem(TOKEN_STORAGE_KEY)
+  const stored = localStorage.getItem(TOKEN_STORAGE_KEY) || localStorage.getItem(LEGACY_TOKEN_STORAGE_KEY)
   if (!stored) return null
 
   try {

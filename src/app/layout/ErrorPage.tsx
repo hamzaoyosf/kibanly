@@ -13,14 +13,14 @@ export const ErrorPage: React.FC<ErrorPageProps> = ({ isNotFound: propIsNotFound
   let statusCode = 404
   let title = 'Sector Coordinate Not Found'
   let message =
-    "The requested coordinate does not exist in the KiBANLY OS matrix or was redirected to an unregistered path."
+    "The requested coordinate does not exist in the OBOiFY matrix or was redirected to an unregistered path."
   let details: string | null = null
 
   if (propIsNotFound) {
     statusCode = 404
     title = 'Sector Coordinate Not Found'
     message =
-      "The requested coordinate does not exist in the KiBANLY OS matrix or was redirected to an unregistered path."
+      "The requested coordinate does not exist in the OBOiFY matrix or was redirected to an unregistered path."
   } else if (isRouteErrorResponse(error)) {
     statusCode = error.status
     if (error.status === 404) {
@@ -64,7 +64,7 @@ export const ErrorPage: React.FC<ErrorPageProps> = ({ isNotFound: propIsNotFound
         <div className="space-y-2">
           <div className="flex items-center justify-center space-x-1.5 text-xs font-mono text-text-faint tracking-widest uppercase">
             <Sparkles className="w-3.5 h-3.5 text-capital" />
-            <span>KiBANLY OS — System Sentinel</span>
+            <span>OBOiFY — System Sentinel</span>
           </div>
           <h1 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
             {title}

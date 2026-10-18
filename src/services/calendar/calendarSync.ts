@@ -28,7 +28,7 @@ function toIsoString(dateOrDateTime: { dateTime?: string; date?: string }, isEnd
 }
 
 /**
- * Inbound sync: Fetch Google Calendar events and project them into KiBANLY TimeBlocks.
+ * Inbound sync: Fetch Google Calendar events and project them into OBOiFY TimeBlocks.
  */
 export async function syncInbound(
   timeMin: string,
@@ -62,7 +62,7 @@ export async function syncInbound(
     const existing = blockMapByGCalId.get(event.id)
 
     if (existing) {
-      // If already in KiBANLY, update start/end/title if changed in Google Calendar
+      // If already in OBOiFY, update start/end/title if changed in Google Calendar
       if (
         existing.title !== (event.summary || '(Untitled Event)') ||
         existing.start !== startIso ||
@@ -118,7 +118,7 @@ export async function syncInbound(
 }
 
 /**
- * Outbound sync: Push a single scheduled KiBANLY TimeBlock to Google Calendar.
+ * Outbound sync: Push a single scheduled OBOiFY TimeBlock to Google Calendar.
  */
 export async function pushBlockToGCal(block: TimeBlock): Promise<TimeBlock | null> {
   if (!isCalendarTokenValid()) return null
@@ -150,7 +150,7 @@ export async function pushBlockToGCal(block: TimeBlock): Promise<TimeBlock | nul
       // Create new event on Google Calendar
       const created = await createCalendarEvent(token.accessToken, {
         summary: block.title,
-        description: 'Scheduled in KiBANLY OS',
+        description: 'Scheduled in OBOiFY',
         start: { dateTime: block.start },
         end: { dateTime: block.end },
       })
@@ -172,7 +172,7 @@ export async function pushBlockToGCal(block: TimeBlock): Promise<TimeBlock | nul
 }
 
 /**
- * Delete a remote Google Calendar event when a synced TimeBlock is deleted in KiBANLY.
+ * Delete a remote Google Calendar event when a synced TimeBlock is deleted in OBOiFY.
  */
 export async function deleteRemoteGCalEvent(eventId: string): Promise<void> {
   if (!isCalendarTokenValid()) return
@@ -202,13 +202,13 @@ export async function syncTwoWay(
   const endTarget = endDateStr || dateStr
   const endIso = new Date(`${endTarget}T23:59:59`).toISOString()
 
-  // 1. Inbound: fetch Google Calendar events -> save to KiBANLY
+  // 1. Inbound: fetch Google Calendar events -> save to OBOiFY
   const inboundRes = await syncInbound(startIso, endIso, token.accessToken)
 
-  // 2. Outbound: find KiBANLY blocks in this window that are not yet synced to GCal
+  // 2. Outbound: find OBOiFY blocks in this window that are not yet synced to GCal
   const blocks = await repos.timeBlocks.list()
   const localBlocksInWindow = blocks.filter(
-    (b) => b.start >= startIso && b.start <= endIso && b.source === 'KiBANLY' && !b.gcal?.eventId
+    (b) => b.start >= startIso && b.start <= endIso && (b.source === 'OBOiFY' || b.source === 'KiBANLY') && !b.gcal?.eventId
   )
 
   let pushedCount = 0

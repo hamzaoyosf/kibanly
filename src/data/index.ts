@@ -74,18 +74,18 @@ export interface AppRepos {
  */
 export function createLocalRepos(): AppRepos {
   return {
-    inbox: new LocalStorageRepo<InboxItem>('KiBANLY:v1:inbox', InboxItemSchema, 'inb', seedInboxItems),
-    tasks: new LocalStorageRepo<Task>('KiBANLY:v1:tasks', TaskSchema, 'tsk', seedTasks),
-    timeBlocks: new LocalStorageRepo<TimeBlock>('KiBANLY:v1:timeBlocks', TimeBlockSchema, 'blk', seedTimeBlocks),
-    habits: new LocalStorageRepo<Habit>('KiBANLY:v1:habits', HabitSchema, 'hab', seedHabits),
-    habitLogs: new LocalStorageRepo<HabitLog>('KiBANLY:v1:habitLogs', HabitLogSchema, 'hlog', seedHabitLogs),
-    energyLogs: new LocalStorageRepo<EnergyLog>('KiBANLY:v1:energyLogs', EnergyLogSchema, 'elog', seedEnergyLogs),
-    transactions: new LocalStorageRepo<Transaction>('KiBANLY:v1:transactions', TransactionSchema, 'txn', seedTransactions),
-    subscriptions: new LocalStorageRepo<Subscription>('KiBANLY:v1:subscriptions', SubscriptionSchema, 'sub', seedSubscriptions),
-    milestones: new LocalStorageRepo<Milestone>('KiBANLY:v1:milestones', MilestoneSchema, 'ms', seedMilestones),
-    notes: new LocalStorageRepo<Note>('KiBANLY:v1:notes', NoteSchema, 'not', seedNotes),
-    resources: new LocalStorageRepo<Resource>('KiBANLY:v1:resources', ResourceSchema, 'res', seedResources),
-    tags: new LocalStorageRepo<Tag>('KiBANLY:v1:tags', TagSchema, 'tag', seedTags),
+    inbox: new LocalStorageRepo<InboxItem>('OBOiFY:v1:inbox', InboxItemSchema, 'inb', seedInboxItems),
+    tasks: new LocalStorageRepo<Task>('OBOiFY:v1:tasks', TaskSchema, 'tsk', seedTasks),
+    timeBlocks: new LocalStorageRepo<TimeBlock>('OBOiFY:v1:timeBlocks', TimeBlockSchema, 'blk', seedTimeBlocks),
+    habits: new LocalStorageRepo<Habit>('OBOiFY:v1:habits', HabitSchema, 'hab', seedHabits),
+    habitLogs: new LocalStorageRepo<HabitLog>('OBOiFY:v1:habitLogs', HabitLogSchema, 'hlog', seedHabitLogs),
+    energyLogs: new LocalStorageRepo<EnergyLog>('OBOiFY:v1:energyLogs', EnergyLogSchema, 'elog', seedEnergyLogs),
+    transactions: new LocalStorageRepo<Transaction>('OBOiFY:v1:transactions', TransactionSchema, 'txn', seedTransactions),
+    subscriptions: new LocalStorageRepo<Subscription>('OBOiFY:v1:subscriptions', SubscriptionSchema, 'sub', seedSubscriptions),
+    milestones: new LocalStorageRepo<Milestone>('OBOiFY:v1:milestones', MilestoneSchema, 'ms', seedMilestones),
+    notes: new LocalStorageRepo<Note>('OBOiFY:v1:notes', NoteSchema, 'not', seedNotes),
+    resources: new LocalStorageRepo<Resource>('OBOiFY:v1:resources', ResourceSchema, 'res', seedResources),
+    tags: new LocalStorageRepo<Tag>('OBOiFY:v1:tags', TagSchema, 'tag', seedTags),
   }
 }
 

@@ -34,7 +34,7 @@ if (auth) {
       try {
         await migrateLocalToCloud(user.uid)
       } catch (err) {
-        console.error('[KiBANLY Cloud Migration] Background sync failed:', err)
+        console.error('[OBOiFY Cloud Migration] Background sync failed:', err)
       }
     }
   })

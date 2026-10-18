@@ -114,21 +114,21 @@ export const AuthPill: React.FC<AuthPillProps> = ({ placement = 'header' }) => {
       {isMenuOpen && (
         <div
           className={cn(
-            'absolute z-50 w-60 p-3 rounded-2xl bg-surface/95 border border-[rgba(255,255,255,0.12)] shadow-[0_10px_40px_rgba(0,0,0,0.85)] backdrop-blur-2xl animate-fade-in space-y-2.5',
+            'absolute z-50 w-60 p-3 rounded-xl bg-surface border border-border shadow-xl animate-in fade-in duration-150 space-y-2.5',
             placement === 'sidebar'
               ? 'bottom-full left-0 mb-2 md:bottom-0 md:left-full md:mb-0 md:ml-3.5'
               : 'top-full right-0 mt-2'
           )}
         >
-          <div className="px-1 pb-2 border-b border-[rgba(255,255,255,0.06)]">
+          <div className="px-1 pb-2 border-b border-border">
             <p className="text-xs font-semibold text-text truncate">
-              {user.displayName || 'KiBANLY Operator'}
+              {user.displayName || 'OBOiFY Operator'}
             </p>
             <p className="text-[10px] font-mono text-text-faint truncate">
               {user.email}
             </p>
-            <div className="mt-1.5 flex items-center space-x-1.5 text-[10px] font-mono text-growth">
-              <Cloud className="w-3.5 h-3.5 text-growth" />
+            <div className="mt-1.5 flex items-center space-x-1.5 text-[10px] font-mono text-emerald-400">
+              <Cloud className="w-3.5 h-3.5" />
               <span>Cloud Firestore Active</span>
             </div>
           </div>

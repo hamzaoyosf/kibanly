@@ -129,7 +129,7 @@ export const ActionHubPage: React.FC = () => {
           start: startDate.toISOString(),
           end: endDate.toISOString(),
           taskId: draggedTask.id,
-          source: 'KiBANLY',
+          source: 'OBOiFY',
           gcal: null,
         })
 
@@ -251,12 +251,12 @@ export const ActionHubPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto py-2">
+    <div className="space-y-6 max-w-7xl mx-auto py-2 w-full max-w-full overflow-x-hidden">
       {/* Top Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[rgba(255,255,255,0.06)]">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-border">
         <div>
           <div className="flex items-center space-x-2.5">
-            <span className="p-2 rounded-xl bg-action/10 text-action">
+            <span className="p-2 rounded-xl bg-surface-2 text-emerald-400 border border-border">
               <Zap className="w-5 h-5" />
             </span>
             <h1 className="text-2xl font-bold tracking-tight text-text">Action Hub</h1>
@@ -266,17 +266,17 @@ export const ActionHubPage: React.FC = () => {
           </p>
         </div>
 
-        {/* View Toggle & New Task */}
-        <div className="flex items-center space-x-3">
+        {/* View Toggle & Action Controls (flex-wrap to prevent viewport blowout) */}
+        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 max-w-full">
           {/* View Mode Toggle: 3 Modes */}
-          <div className="flex items-center p-1 bg-surface-2 rounded-xl border border-[rgba(255,255,255,0.06)]">
+          <div className="flex items-center p-1 bg-surface-2 rounded-xl border border-border shrink-0">
             <button
               type="button"
               onClick={() => setViewMode('kanban')}
               className={cn(
                 'flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
                 viewMode === 'kanban'
-                  ? 'bg-surface text-action shadow-sm'
+                  ? 'bg-surface text-emerald-400 shadow-sm'
                   : 'text-text-muted hover:text-text'
               )}
             >
@@ -290,7 +290,7 @@ export const ActionHubPage: React.FC = () => {
               className={cn(
                 'flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
                 viewMode === 'eisenhower'
-                  ? 'bg-surface text-action shadow-sm'
+                  ? 'bg-surface text-emerald-400 shadow-sm'
                   : 'text-text-muted hover:text-text'
               )}
             >
@@ -304,7 +304,7 @@ export const ActionHubPage: React.FC = () => {
               className={cn(
                 'flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
                 viewMode === 'timeline'
-                  ? 'bg-surface text-action shadow-sm'
+                  ? 'bg-surface text-emerald-400 shadow-sm'
                   : 'text-text-muted hover:text-text'
               )}
             >
@@ -317,10 +317,10 @@ export const ActionHubPage: React.FC = () => {
           <button
             type="button"
             onClick={openWeeklyReview}
-            className="flex items-center space-x-1.5 px-3 py-2 rounded-chip font-medium text-xs bg-surface-2 border border-[rgba(255,255,255,0.08)] text-text-muted hover:text-growth hover:border-growth/40 transition-all active:scale-95 shadow-sm"
+            className="flex items-center space-x-1.5 px-3 py-2 rounded-chip font-medium text-xs bg-surface-2 border border-border text-text-muted hover:text-emerald-400 hover:border-emerald-500/40 transition-all active:scale-95 shadow-sm shrink-0"
             title="Launch GTD Weekly Review Wizard"
           >
-            <CalendarCheck className="w-3.5 h-3.5 text-growth" />
+            <CalendarCheck className="w-3.5 h-3.5 text-emerald-400" />
             <span className="hidden sm:inline">Weekly Review</span>
           </button>
 
@@ -329,8 +329,8 @@ export const ActionHubPage: React.FC = () => {
             type="button"
             onClick={handleNewTask}
             className={cn(
-              'flex items-center space-x-1.5 px-3.5 py-2 rounded-chip font-semibold text-xs',
-              'bg-action text-black hover:brightness-110 active:scale-95 transition-all shadow-md'
+              'flex items-center space-x-1.5 px-3.5 py-2 rounded-chip font-semibold text-xs shrink-0',
+              'bg-emerald-600 hover:bg-emerald-500 text-white active:scale-95 transition-all shadow-md'
             )}
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
@@ -339,38 +339,40 @@ export const ActionHubPage: React.FC = () => {
         </div>
       </div>
 
-      {/* GTD Filter Bar (Visible in Kanban & Eisenhower) */}
+      {/* GTD Filter Bar (Visible in Kanban & Eisenhower) - Horizontally scrollable without viewport overflow */}
       {viewMode !== 'timeline' && (
-        <div className="flex items-center space-x-2 overflow-x-auto pb-1 text-xs">
-          <span className="flex items-center space-x-1 text-text-faint font-medium pl-1 pr-2 shrink-0">
-            <Filter className="w-3.5 h-3.5" />
-            <span>GTD:</span>
-          </span>
+        <div className="w-full max-w-full overflow-hidden">
+          <div className="flex items-center space-x-2 overflow-x-auto whitespace-nowrap scrollbar-hide hide-scrollbar pb-1 text-xs">
+            <span className="flex items-center space-x-1 text-text-faint font-medium pl-1 pr-1 shrink-0">
+              <Filter className="w-3.5 h-3.5" />
+              <span>GTD:</span>
+            </span>
 
-          {[
-            { id: 'all', label: 'All Tasks' },
-            { id: 'next', label: 'Next Action' },
-            { id: 'scheduled', label: 'Scheduled' },
-            { id: 'waiting', label: 'Waiting For' },
-            { id: 'someday', label: 'Someday' },
-          ].map((filter) => {
-            const isSelected = selectedGTD === filter.id
-            return (
-              <button
-                key={filter.id}
-                type="button"
-                onClick={() => setSelectedGTD(filter.id as GTDList | 'all')}
-                className={cn(
-                  'px-3 py-1.5 rounded-chip font-medium whitespace-nowrap transition-colors border',
-                  isSelected
-                    ? 'bg-action/15 text-action border-action/40 shadow-sm'
-                    : 'bg-surface-2 text-text-muted border-[rgba(255,255,255,0.06)] hover:text-text hover:bg-surface'
-                )}
-              >
-                {filter.label}
-              </button>
-            )
-          })}
+            {[
+              { id: 'all', label: 'All Tasks' },
+              { id: 'next', label: 'Next Action' },
+              { id: 'scheduled', label: 'Scheduled' },
+              { id: 'waiting', label: 'Waiting For' },
+              { id: 'someday', label: 'Someday' },
+            ].map((filter) => {
+              const isSelected = selectedGTD === filter.id
+              return (
+                <button
+                  key={filter.id}
+                  type="button"
+                  onClick={() => setSelectedGTD(filter.id as GTDList | 'all')}
+                  className={cn(
+                    'px-3 py-1.5 rounded-chip font-medium whitespace-nowrap transition-colors border shrink-0',
+                    isSelected
+                      ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40 shadow-sm'
+                      : 'bg-surface-2 text-text-muted border-border hover:text-text hover:bg-surface'
+                  )}
+                >
+                  {filter.label}
+                </button>
+              )
+            })}
+          </div>
         </div>
       )}
 

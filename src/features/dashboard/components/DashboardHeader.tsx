@@ -1,4 +1,5 @@
-import { Sparkles, Zap, Activity, Search } from 'lucide-react'
+import React from 'react'
+import { Activity, Search, Plus } from 'lucide-react'
 import { useUIStore } from '@/app/store/uiStore'
 import { AuthPill } from '@/features/auth/components/AuthPill'
 
@@ -9,56 +10,32 @@ export const DashboardHeader: React.FC = () => {
   const today = new Date()
   const dateFormatted = today.toLocaleDateString('en-US', {
     weekday: 'long',
-    month: 'long',
+    month: 'short',
     day: 'numeric',
     year: 'numeric',
   })
 
   return (
-    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-[rgba(255,255,255,0.06)] animate-fade-in">
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-border">
       <div>
-        <div className="flex items-center space-x-2.5 mb-1.5">
-          <span className="p-1.5 rounded-xl bg-surface-2 border border-[rgba(255,255,255,0.08)] text-white shadow-sm flex items-center justify-center">
-            <Activity className="w-4 h-4 text-action" />
+        <div className="flex items-center space-x-2.5 mb-1">
+          <span className="p-1.5 rounded-lg bg-surface-2 border border-border text-emerald-400 shadow-sm flex items-center justify-center">
+            <Activity className="w-3.5 h-3.5" />
           </span>
-          <span className="text-xs font-mono text-text-faint tracking-wider uppercase font-semibold">
+          <span className="text-xs font-mono text-text-muted uppercase tracking-wider font-semibold">
             {dateFormatted}
           </span>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text flex items-center space-x-2">
-          <span>Command Center</span>
-          <Sparkles className="w-5 h-5 text-capital animate-pulse" />
+        <h1 className="text-2xl font-bold tracking-tight text-text">
+          Command Deck
         </h1>
-        <p className="mt-1 text-xs text-text-muted max-w-xl">
-          Unified synthesis across Action, Growth, Capital, and Knowledge. Your autonomous daily executive overview.
+        <p className="mt-0.5 text-xs text-text-muted">
+          Unified execution console across Action, Growth, Capital, and Knowledge.
         </p>
       </div>
 
-      {/* Hub Status Pulses & Quick Actions */}
+      {/* Quick Actions & Auth */}
       <div className="flex items-center flex-wrap gap-2.5">
-        {/* Hub Pulses */}
-        <div className="hidden lg:flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-surface-2/80 border border-[rgba(255,255,255,0.06)] text-[11px] font-mono text-text-faint">
-          <span className="flex items-center space-x-1.5">
-            <span className="w-2 h-2 rounded-full bg-action animate-ping" />
-            <span className="text-text">Action</span>
-          </span>
-          <span>·</span>
-          <span className="flex items-center space-x-1.5">
-            <span className="w-2 h-2 rounded-full bg-growth" />
-            <span className="text-text">Growth</span>
-          </span>
-          <span>·</span>
-          <span className="flex items-center space-x-1.5">
-            <span className="w-2 h-2 rounded-full bg-capital" />
-            <span className="text-text">Capital</span>
-          </span>
-          <span>·</span>
-          <span className="flex items-center space-x-1.5">
-            <span className="w-2 h-2 rounded-full bg-knowledge" />
-            <span className="text-text">Knowledge</span>
-          </span>
-        </div>
-
         {/* Cloud Auth Status Pill */}
         <AuthPill />
 
@@ -66,26 +43,26 @@ export const DashboardHeader: React.FC = () => {
         <button
           type="button"
           onClick={openCommandPalette}
-          className="flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-surface-2 border border-[rgba(255,255,255,0.08)] text-text-muted hover:text-text hover:bg-surface-3 transition-all text-xs font-mono"
+          className="flex items-center space-x-1.5 px-3 py-2 rounded-lg bg-surface border border-border text-text-muted hover:text-text hover:bg-surface-2 hover:border-gray-600 transition-all text-xs font-mono shadow-sm"
           title="Search Command Palette (Cmd+K)"
         >
-          <Search className="w-3.5 h-3.5 text-action" />
+          <Search className="w-3.5 h-3.5 text-text-muted" />
           <span className="hidden sm:inline">Search</span>
-          <kbd className="px-1 py-0.2 rounded bg-surface border border-[rgba(255,255,255,0.1)] text-[10px] text-text-faint">
+          <kbd className="px-1 py-0.2 rounded bg-surface-2 border border-border text-[10px] text-text-faint">
             ⌘K
           </kbd>
         </button>
 
-        {/* Quick Capture Button */}
+        {/* Quick Capture Button - Semantic Green */}
         <button
           type="button"
           onClick={openQuickCapture}
-          className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-action/15 text-action hover:bg-action hover:text-black border border-action/30 transition-all text-xs font-semibold shadow-sm font-mono"
+          className="flex items-center space-x-1.5 px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition-all text-xs font-semibold shadow-sm hover:shadow font-mono active:scale-95"
           title="Press 'Q' or click to quick-capture a thought or task"
         >
-          <Zap className="w-3.5 h-3.5" />
-          <span>Quick Capture</span>
-          <kbd className="px-1 py-0.2 rounded bg-black/40 border border-action/30 text-[10px]">Q</kbd>
+          <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+          <span>Capture</span>
+          <kbd className="px-1 py-0.2 rounded bg-black/25 text-white/90 text-[10px]">Q</kbd>
         </button>
       </div>
     </div>

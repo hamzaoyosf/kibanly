@@ -15,7 +15,6 @@ export const ActionWidget: React.FC = () => {
   const activeTasks = tasks
     .filter((t: Task) => t.status !== 'done')
     .sort((a: Task, b: Task) => {
-      // High before medium before low
       const pOrder: Record<string, number> = { high: 1, medium: 2, low: 3 }
       const qOrder: Record<string, number> = { q1_do: 1, q2_plan: 2, q3_delegate: 3, q4_eliminate: 4 }
       const pDiff = (pOrder[a.priority] || 4) - (pOrder[b.priority] || 4)
@@ -49,29 +48,29 @@ export const ActionWidget: React.FC = () => {
 
   return (
     <div
-      className="card p-5 bg-surface border border-[rgba(255,255,255,0.06)] hover:border-action/40 transition-all flex flex-col justify-between space-y-4"
+      className="card p-5 bg-surface border border-border border-t-2 border-t-sky-400 hover:border-gray-600 hover:shadow-card-hover transition-all flex flex-col justify-between space-y-4"
       data-hub="action"
     >
       <div>
         {/* Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-[rgba(255,255,255,0.06)]">
+        <div className="flex items-center justify-between pb-3 border-b border-border">
           <div className="flex items-center space-x-2.5">
-            <span className="p-2 rounded-xl bg-action/10 text-action shadow-[0_0_12px_rgba(34,211,238,0.2)]">
+            <span className="p-2 rounded-lg bg-surface-2 text-sky-400 border border-border">
               <CheckSquare className="w-4 h-4" />
             </span>
             <div>
               <div className="flex items-center space-x-2">
-                <h2 className="text-sm font-bold text-text">Execution & TimeGrid</h2>
-                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-action/15 text-action font-mono font-medium">
-                  {completedTodayCount} done today
+                <h2 className="text-sm font-bold text-text">Execution & Agenda</h2>
+                <span className="text-[10px] px-1.5 py-0.2 rounded-md bg-emerald-500/15 text-emerald-400 font-mono font-medium border border-emerald-500/20">
+                  {completedTodayCount} done
                 </span>
               </div>
               <p className="text-[11px] text-text-faint font-mono">Action Hub</p>
             </div>
           </div>
           <Link
-            to="/action"
-            className="p-1.5 rounded-lg text-text-faint hover:text-action hover:bg-surface-2 transition-colors"
+            to="/app/action"
+            className="p-1.5 rounded-lg text-text-faint hover:text-text hover:bg-surface-2 transition-colors"
             title="Open Action Hub"
           >
             <ArrowUpRight className="w-4 h-4" />
@@ -81,40 +80,35 @@ export const ActionWidget: React.FC = () => {
         {/* Schedule Strip */}
         <div className="mt-3.5 space-y-2">
           <div className="flex items-center space-x-1.5 text-[11px] font-mono text-text-faint">
-            <Clock className="w-3.5 h-3.5 text-action" />
+            <Clock className="w-3.5 h-3.5 text-sky-400" />
             <span>TODAY&apos;S SCHEDULE ({todayBlocks.length})</span>
           </div>
 
-          {todayBlocks.length === 0 ? (
-            <div className="p-3 rounded-xl bg-surface-2/40 border border-dashed border-[rgba(255,255,255,0.06)] text-center text-xs text-text-faint font-mono">
-              No time blocks scheduled for today.{' '}
-              <Link to="/action" className="text-action hover:underline">
-                Plan on TimeGrid →
-              </Link>
-            </div>
-          ) : (
-            <div className="space-y-1.5">
-              {todayBlocks.map((block) => (
+          <div className="space-y-1.5">
+            {todayBlocks.length === 0 ? (
+              <p className="p-3 rounded-lg bg-surface-2/40 border border-border/50 text-center text-xs text-text-muted font-mono">
+                No blocks scheduled for today. Drag tasks onto the timeline.
+              </p>
+            ) : (
+              todayBlocks.map((b) => (
                 <div
-                  key={block.id}
-                  className="flex items-center justify-between px-3 py-2 rounded-xl bg-surface-2/60 border border-[rgba(255,255,255,0.04)] text-xs font-mono"
+                  key={b.id}
+                  className="flex items-center justify-between p-2 rounded-lg bg-surface-2/60 border border-border text-xs"
                 >
                   <div className="flex items-center space-x-2 truncate">
-                    <span className="w-2 h-2 rounded-full bg-action shrink-0" />
-                    <span className="text-text font-medium truncate font-sans text-xs">
-                      {block.title}
-                    </span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-sky-400 shrink-0" />
+                    <span className="font-medium text-text truncate">{b.title}</span>
                   </div>
-                  <span className="text-[10px] text-text-faint shrink-0 ml-2">
-                    {formatTime(block.start)} - {formatTime(block.end)}
+                  <span className="font-mono text-[11px] text-text-muted shrink-0 ml-2">
+                    {formatTime(b.start)} - {formatTime(b.end)}
                   </span>
                 </div>
-              ))}
-            </div>
-          )}
+              ))
+            )}
+          </div>
         </div>
 
-        {/* High-Leverage Tasks Section */}
+        {/* Priority Next Actions */}
         <div className="mt-4 space-y-2">
           <div className="flex items-center justify-between text-[11px] font-mono text-text-faint">
             <span>PRIORITY EXECUTION</span>
@@ -123,7 +117,7 @@ export const ActionWidget: React.FC = () => {
 
           <div className="space-y-1.5">
             {activeTasks.length === 0 ? (
-              <p className="p-3 rounded-xl bg-surface-2/30 text-center text-xs text-text-faint font-mono">
+              <p className="p-3 rounded-lg bg-surface-2/40 border border-border/50 text-center text-xs text-text-muted font-mono">
                 All priority tasks completed. Great velocity!
               </p>
             ) : (
@@ -131,15 +125,15 @@ export const ActionWidget: React.FC = () => {
                 <div
                   key={t.id}
                   onClick={() => handleToggleTask(t.id, t.status)}
-                  className="flex items-center justify-between p-2.5 rounded-xl bg-surface-2/40 hover:bg-surface-2/80 border border-[rgba(255,255,255,0.04)] cursor-pointer transition-colors group"
+                  className="flex items-center justify-between p-2.5 rounded-lg bg-surface-2/50 hover:bg-surface-2 border border-border cursor-pointer transition-colors group"
                 >
                   <div className="flex items-center space-x-2.5 truncate">
                     <button
                       type="button"
-                      className="text-text-faint group-hover:text-action transition-colors shrink-0"
+                      className="text-text-faint group-hover:text-emerald-400 transition-colors shrink-0"
                     >
                       {t.status === 'done' ? (
-                        <CheckCircle2 className="w-4 h-4 text-growth" />
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                       ) : (
                         <Circle className="w-4 h-4" />
                       )}
@@ -161,9 +155,9 @@ export const ActionWidget: React.FC = () => {
                       className={cn(
                         'px-1.5 py-0.2 rounded font-semibold uppercase',
                         t.priority === 'high'
-                          ? 'bg-danger/20 text-danger border border-danger/30'
+                          ? 'bg-red-500/15 text-red-400 border border-red-500/30'
                           : t.priority === 'medium'
-                          ? 'bg-capital/20 text-capital border border-capital/30'
+                          ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
                           : 'bg-surface-2 text-text-faint'
                       )}
                     >
@@ -178,11 +172,11 @@ export const ActionWidget: React.FC = () => {
       </div>
 
       {/* Footer Deep-Link */}
-      <div className="pt-3 border-t border-[rgba(255,255,255,0.04)] flex items-center justify-between text-xs">
+      <div className="pt-3 border-t border-border flex items-center justify-between text-xs">
         <span className="text-text-faint font-mono text-[11px]">Kanban & Eisenhower</span>
         <Link
-          to="/action"
-          className="text-action hover:underline font-medium flex items-center space-x-1 text-xs font-mono"
+          to="/app/action"
+          className="text-sky-400 hover:underline font-medium flex items-center space-x-1 text-xs font-mono"
         >
           <span>Open Hub</span>
           <span>→</span>

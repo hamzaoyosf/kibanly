@@ -4,7 +4,6 @@ import { useInbox, useBatchAICategorizeInbox } from './useInbox'
 import { InboxRow } from './InboxRow'
 import { useUIStore } from '@/app/store/uiStore'
 import { GeminiConfigModal, isGeminiConfigured } from '@/services/ai'
-import { RenewalAlertBanner } from '@/features/capital/components/RenewalAlertBanner'
 import { cn } from '@/lib/utils'
 
 export const InboxPage: React.FC = () => {
@@ -90,9 +89,6 @@ export const InboxPage: React.FC = () => {
           </button>
         </div>
       </div>
-
-      {/* Capital Hub Renewal Alerts */}
-      <RenewalAlertBanner />
 
       {/* Tabs & Batch Actions */}
       <div className="flex flex-wrap items-center justify-between gap-3">

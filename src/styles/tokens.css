@@ -1,39 +1,41 @@
 :root {
-  /* Surfaces (OLED) */
-  --bg: #000000;
-  --bg-elevated: #0A0A0A;
-  --surface: #0F0F12;
-  --surface-2: #16161A;
-  --border: rgba(255, 255, 255, 0.06);
-  --border-strong: rgba(255, 255, 255, 0.12);
+  /* Canvas & Surfaces (Flat Dark Gray - OBOiFY) */
+  --bg: #111827;            /* Tailwind gray-900 */
+  --bg-elevated: #1F2937;   /* Tailwind gray-800 */
+  --surface: #1F2937;       /* Tailwind gray-800 */
+  --surface-2: #374151;     /* Tailwind gray-700 */
+  --surface-inset: #0F172A; /* Tailwind slate-900 / gray-950 */
+  --border: #374151;        /* Tailwind gray-700 */
+  --border-strong: #4B5563; /* Tailwind gray-600 */
 
   /* Text */
-  --text: #F5F5F7;          /* primary: ~18:1 on #000 */
-  --text-muted: #A1A1AA;    /* secondary: ~7.8:1 */
-  --text-faint: #6B6B76;    /* tertiary: non-essential labels only */
+  --text: #F9FAFB;          /* Tailwind gray-50 */
+  --text-muted: #9CA3AF;    /* Tailwind gray-400 */
+  --text-faint: #6B7280;    /* Tailwind gray-500 */
 
-  /* Hub accents (neon) */
-  --action: #22D3EE;        /* Cyan */
-  --action-dim: #0E7490;
-  --growth: #34F5A4;        /* Mint Green */
-  --growth-dim: #0F8F5F;
-  --capital: #FBBF24;       /* Vibrant Amber */
-  --capital-dim: #B45309;
-  --knowledge: #8B5CF6;     /* Electric Violet */
-  --knowledge-dim: #5B21B6;
+  /* Strict Semantic Colors */
+  --semantic-green: #10B981;      /* Emerald-500: Done, Positive, Checked, Active */
+  --semantic-green-dark: #059669; /* Emerald-600 */
+  --semantic-red: #EF4444;        /* Red-500: Overdue, Negative, Danger, Error */
+  --semantic-red-dark: #DC2626;   /* Red-600 */
 
-  /* Semantic */
-  --danger: #FB7185;
-  --success: var(--growth);
-  --warning: var(--capital);
-  --info: var(--action);
+  /* Functional mappings */
+  --success: var(--semantic-green);
+  --danger: var(--semantic-red);
+  --warning: #F59E0B;             /* Amber-500 */
+  --info: #3B82F6;                /* Blue-500 */
 
-  /* Glass & glow */
-  --glass-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01));
-  --glass-blur: blur(18px);
-  --inner-glow-action: inset 0 0 40px -12px rgba(34, 211, 238, 0.35);
-  --inner-glow-growth: inset 0 0 40px -12px rgba(52, 245, 164, 0.35);
-  --inner-glow-capital: inset 0 0 40px -12px rgba(251, 191, 36, 0.35);
-  --inner-glow-knowledge: inset 0 0 40px -12px rgba(139, 92, 246, 0.35);
-  --shadow-card: 0 8px 32px -8px rgba(0, 0, 0, 0.8);
+  /* Whisper-Quiet Hub Accents (Subtle top borders / hover-only) */
+  --action: #38BDF8;        /* Sky-400 (subtle Action accent) */
+  --action-dim: #0284C7;
+  --growth: #34D399;        /* Emerald-400 (subtle Growth accent) */
+  --growth-dim: #059669;
+  --capital: #FBBF24;       /* Amber-400 (subtle Capital accent) */
+  --capital-dim: #D97706;
+  --knowledge: #A78BFA;     /* Violet-400 (subtle Knowledge accent) */
+  --knowledge-dim: #7C3AED;
+
+  /* Flat Elevation & Drop-Shadows (Zero neon glow) */
+  --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px -1px rgba(0, 0, 0, 0.3);
+  --shadow-hover: 0 4px 6px -1px rgba(0, 0, 0, 0.35), 0 2px 4px -2px rgba(0, 0, 0, 0.25);
 }

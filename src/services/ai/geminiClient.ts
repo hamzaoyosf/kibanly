@@ -1,6 +1,7 @@
 import { GoogleGenAI } from '@google/genai'
 
-const LOCAL_STORAGE_KEY = 'kibanly_gemini_api_key'
+const LOCAL_STORAGE_KEY = 'oboify_gemini_api_key'
+const LEGACY_STORAGE_KEY = 'kibanly_gemini_api_key'
 export const DEFAULT_GEMINI_MODEL = 'gemini-1.5-flash'
 
 /**
@@ -13,7 +14,9 @@ export function getGeminiApiKey(): string | null {
     return envKey.trim()
   }
 
-  const storedKey = typeof window !== 'undefined' ? localStorage.getItem(LOCAL_STORAGE_KEY) : null
+  const storedKey = typeof window !== 'undefined'
+    ? (localStorage.getItem(LOCAL_STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY))
+    : null
   if (storedKey && storedKey.trim().length > 10) {
     return storedKey.trim()
   }

@@ -12,10 +12,14 @@ import {
   calculateMilestoneEtaMonths,
   parseMoneyToMinor,
 } from '@/lib/money'
+import { usePreferencesStore } from '@/app/store/preferencesStore'
+import { useExchangeRates } from '../useExchangeRates'
 import { cn } from '@/lib/utils'
 
 export const MilestoneCard: React.FC = () => {
   const { data: milestones = [], isLoading } = useMilestones()
+  const defaultCurrency = usePreferencesStore((s) => s.defaultCurrency) || 'USD'
+  const { convert } = useExchangeRates()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingMilestone, setEditingMilestone] = useState<Milestone | null>(null)
   const deleteMutation = useDeleteMilestone()
@@ -136,6 +140,11 @@ export const MilestoneCard: React.FC = () => {
                       of {formatMoney(ms.targetMinor, ms.currency)} ({percent}%)
                     </span>
                   </div>
+                  {ms.currency && ms.currency !== defaultCurrency && (
+                    <p className="text-[10px] font-mono text-text-muted leading-tight">
+                      ~{formatMoney(convert(ms.currentMinor, ms.currency, defaultCurrency), defaultCurrency)} of {formatMoney(convert(ms.targetMinor, ms.currency, defaultCurrency), defaultCurrency)}
+                    </p>
+                  )}
                   <div className="w-full h-2 rounded-full bg-surface-2 overflow-hidden border border-[rgba(255,255,255,0.04)]">
                     <div
                       className="h-full bg-capital transition-all duration-300 shadow-[0_0_8px_rgba(251,191,36,0.4)]"

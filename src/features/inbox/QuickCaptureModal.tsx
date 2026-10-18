@@ -50,7 +50,7 @@ export const QuickCaptureModal: React.FC = () => {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center pt-20 sm:pt-28 px-4 bg-black/70 backdrop-blur-md transition-opacity animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex items-start justify-center pt-20 sm:pt-28 px-4 bg-black/60 transition-opacity animate-in fade-in duration-150"
       onClick={(e) => {
         if (e.target === e.currentTarget) closeQuickCapture()
       }}
@@ -60,15 +60,14 @@ export const QuickCaptureModal: React.FC = () => {
     >
       <div
         className={cn(
-          'w-full max-w-xl card p-5 relative border border-[rgba(255,255,255,0.12)]',
-          'bg-surface/95 shadow-2xl transition-all duration-200'
+          'w-full max-w-xl card p-5 relative border border-border',
+          'bg-surface shadow-card transition-all duration-200'
         )}
-        data-hub="action"
       >
         {/* Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-[rgba(255,255,255,0.06)]">
+        <div className="flex items-center justify-between pb-3 border-b border-border">
           <div className="flex items-center space-x-2">
-            <span className="p-1 rounded-md bg-action/10 text-action">
+            <span className="p-1 rounded-md bg-surface-2 text-emerald-400">
               <Sparkles className="w-4 h-4" />
             </span>
             <h2 id="quick-capture-title" className="text-sm font-semibold text-text tracking-wide">
@@ -101,16 +100,16 @@ export const QuickCaptureModal: React.FC = () => {
           />
 
           {/* Footer Controls */}
-          <div className="flex items-center justify-between pt-3 mt-2 border-t border-[rgba(255,255,255,0.06)] text-xs text-text-faint">
+          <div className="flex items-center justify-between pt-3 mt-2 border-t border-border text-xs text-text-faint">
             <div className="flex items-center space-x-3">
               <span className="flex items-center space-x-1">
-                <kbd className="px-1.5 py-0.5 rounded bg-surface-2 border border-[rgba(255,255,255,0.08)] font-mono text-[10px]">
+                <kbd className="px-1.5 py-0.5 rounded bg-surface-2 border border-border font-mono text-[10px] text-text-muted">
                   Enter ↵
                 </kbd>
                 <span>capture</span>
               </span>
               <span className="flex items-center space-x-1">
-                <kbd className="px-1.5 py-0.5 rounded bg-surface-2 border border-[rgba(255,255,255,0.08)] font-mono text-[10px]">
+                <kbd className="px-1.5 py-0.5 rounded bg-surface-2 border border-border font-mono text-[10px] text-text-muted">
                   Shift + Enter
                 </kbd>
                 <span>line</span>
@@ -121,9 +120,9 @@ export const QuickCaptureModal: React.FC = () => {
               type="submit"
               disabled={!text.trim() || createMutation.isPending}
               className={cn(
-                'flex items-center space-x-1.5 px-3 py-1.5 rounded-chip font-medium text-xs transition-all',
+                'flex items-center space-x-1.5 px-3 py-1.5 rounded-chip font-medium text-xs transition-colors',
                 text.trim()
-                  ? 'bg-action text-black hover:brightness-110 active:scale-95 shadow-sm'
+                  ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm'
                   : 'bg-surface-2 text-text-faint cursor-not-allowed'
               )}
             >
