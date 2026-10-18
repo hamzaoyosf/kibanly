@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { X, Clock, Trash2, Check } from 'lucide-react'
+import { X, Clock, Trash2, Check, Calendar as CalendarIcon } from 'lucide-react'
 import { TimeBlock, TimeBlockCategory } from '@/data/ports/schemas'
 import { useUpdateTimeBlock, useDeleteTimeBlock } from '../useTimeBlocks'
 
@@ -105,6 +105,15 @@ export const EditTimeBlockModal: React.FC<EditTimeBlockModalProps> = ({
             <X className="w-4 h-4" />
           </button>
         </div>
+
+        {block.gcal?.eventId && (
+          <div className="flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-action/10 border border-action/25 text-action text-xs font-mono">
+            <CalendarIcon className="w-3.5 h-3.5 shrink-0" />
+            <span>
+              Synced with Google Calendar ({block.source === 'gcal' ? 'Imported' : 'Exported'})
+            </span>
+          </div>
+        )}
 
         <form onSubmit={handleSave} className="space-y-3.5 text-xs">
           <div>

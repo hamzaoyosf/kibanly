@@ -11,8 +11,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Plus,
+  Search,
 } from 'lucide-react'
 import { useUIStore } from '@/app/store/uiStore'
+import { AuthPill } from '@/features/auth/components/AuthPill'
 import { cn } from '@/lib/utils'
 
 interface NavItem {
@@ -34,7 +36,7 @@ const mainNavItems: NavItem[] = [
 
 export const HubRail: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(false)
-  const { openQuickCapture } = useUIStore()
+  const { openQuickCapture, openCommandPalette } = useUIStore()
 
   return (
     <>
@@ -101,6 +103,27 @@ export const HubRail: React.FC = () => {
                 </kbd>
               )}
             </button>
+
+            {/* Command Palette Trigger */}
+            <button
+              type="button"
+              onClick={openCommandPalette}
+              className={cn(
+                'w-full mt-1.5 flex items-center rounded-xl bg-surface-2/60 border border-[rgba(255,255,255,0.06)] text-text-muted hover:text-text hover:bg-surface-2 transition-all active:scale-95 text-xs',
+                isExpanded ? 'h-9 px-3 justify-between' : 'h-9 justify-center'
+              )}
+              title="Search Command Palette (Cmd+K)"
+            >
+              <div className="flex items-center space-x-2">
+                <Search className="w-3.5 h-3.5 text-action" />
+                {isExpanded && <span>Search...</span>}
+              </div>
+              {isExpanded && (
+                <kbd className="px-1 py-0.5 rounded bg-surface border border-[rgba(255,255,255,0.08)] font-mono text-[9px] text-text-faint">
+                  ⌘K
+                </kbd>
+              )}
+            </button>
           </div>
 
           {/* Navigation Items */}
@@ -138,8 +161,12 @@ export const HubRail: React.FC = () => {
           </nav>
         </div>
 
-        {/* Footer / Settings */}
-        <div className="p-2 border-t border-[rgba(255,255,255,0.06)]">
+        {/* Footer / Settings & Cloud Auth */}
+        <div className="p-2 border-t border-[rgba(255,255,255,0.06)] space-y-2">
+          <div className="flex items-center justify-center">
+            <AuthPill placement="sidebar" />
+          </div>
+
           <NavLink
             to="/settings"
             className={({ isActive }) =>

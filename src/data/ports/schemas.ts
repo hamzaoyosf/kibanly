@@ -22,6 +22,9 @@ export type Priority = z.infer<typeof PriorityEnum>
 export const InboxStatusEnum = z.enum(['unprocessed', 'processed', 'trashed'])
 export type InboxStatus = z.infer<typeof InboxStatusEnum>
 
+export const EisenhowerQuadrantEnum = z.enum(['do', 'schedule', 'delegate', 'delete']).nullable()
+export type EisenhowerQuadrant = z.infer<typeof EisenhowerQuadrantEnum>
+
 export const InboxAISchema = z.object({
   category: InboxCategoryEnum,
   priority: PriorityEnum,
@@ -29,6 +32,10 @@ export const InboxAISchema = z.object({
   confidence: z.number().min(0).max(1),
   model: z.string(),
   accepted: z.boolean().nullable().optional(),
+  reasoning: z.string().nullable().optional(),
+  tags: z.array(z.string()).optional(),
+  suggestedQuadrant: EisenhowerQuadrantEnum.optional(),
+  estimateMin: z.number().optional(),
 })
 export type InboxAI = z.infer<typeof InboxAISchema>
 
@@ -61,8 +68,6 @@ export type TaskStatus = z.infer<typeof TaskStatusEnum>
 export const GTDListEnum = z.enum(['next', 'scheduled', 'waiting', 'someday'])
 export type GTDList = z.infer<typeof GTDListEnum>
 
-export const EisenhowerQuadrantEnum = z.enum(['do', 'schedule', 'delegate', 'delete']).nullable()
-export type EisenhowerQuadrant = z.infer<typeof EisenhowerQuadrantEnum>
 
 export const SubtaskSchema = z.object({
   id: z.string(),

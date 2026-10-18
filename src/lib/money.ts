@@ -1,4 +1,5 @@
 import { Transaction, TransactionScope, SubscriptionCycle } from '@/data/ports/schemas'
+import { usePreferencesStore } from '@/app/store/preferencesStore'
 
 /**
  * Formats integer minor units (e.g. cents) as a locale currency string.
@@ -7,12 +8,18 @@ import { Transaction, TransactionScope, SubscriptionCycle } from '@/data/ports/s
  *   formatMoney(450000) => "$4,500.00"
  *   formatMoney(-1500) => "-$15.00"
  */
-export function formatMoney(amountMinor: number, currency = 'USD'): string {
+export function formatMoney(amountMinor: number, currency?: string): string {
+  const activeCurrency =
+    currency ||
+    (typeof window !== 'undefined'
+      ? usePreferencesStore.getState?.()?.defaultCurrency
+      : 'USD') ||
+    'USD'
   const isNegative = amountMinor < 0
   const absAmount = Math.abs(amountMinor) / 100
   const formatted = new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency,
+    currency: activeCurrency,
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(absAmount)

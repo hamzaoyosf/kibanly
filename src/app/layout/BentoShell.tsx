@@ -2,14 +2,28 @@ import React, { useEffect } from 'react'
 import { Outlet } from 'react-router-dom'
 import { HubRail } from './HubRail'
 import { QuickCaptureModal } from '@/features/inbox/QuickCaptureModal'
+import { CommandPalette } from '@/features/command/CommandPalette'
 import { useUIStore } from '@/app/store/uiStore'
 
 export const BentoShell: React.FC = () => {
-  // Global keyboard shortcuts: 'q' or 'i' opens Quick Capture (SRS FR-INB-01 / PRD AH-1)
+  // Global keyboard shortcuts:
+  // - Cmd+K / Ctrl+K opens Command Palette
+  // - 'q' or 'i' opens Quick Capture (SRS FR-INB-01 / PRD AH-1)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore when modifier keys are pressed (Ctrl, Alt, Meta)
+      // 1. Check for Cmd+K / Ctrl+K Command Palette trigger
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        useUIStore.getState().toggleCommandPalette()
+        return
+      }
+
+      // Ignore single-key shortcuts when modifier keys are pressed
       if (e.ctrlKey || e.altKey || e.metaKey) return
+
+      // Don't trigger if command palette or quick capture is already open
+      const { isCommandPaletteOpen, isQuickCaptureOpen } = useUIStore.getState()
+      if (isCommandPaletteOpen || isQuickCaptureOpen) return
 
       // Strictly verify that document.activeElement is not an INPUT or TEXTAREA
       const activeElement = document.activeElement as HTMLElement | null
@@ -58,6 +72,9 @@ export const BentoShell: React.FC = () => {
 
       {/* Global Quick Capture Modal */}
       <QuickCaptureModal />
+
+      {/* Global Command Palette */}
+      <CommandPalette />
     </div>
   )
 }

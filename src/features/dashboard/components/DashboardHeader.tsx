@@ -1,9 +1,10 @@
-import React from 'react'
-import { Sparkles, Zap, Activity } from 'lucide-react'
+import { Sparkles, Zap, Activity, Search } from 'lucide-react'
 import { useUIStore } from '@/app/store/uiStore'
+import { AuthPill } from '@/features/auth/components/AuthPill'
 
 export const DashboardHeader: React.FC = () => {
   const openQuickCapture = useUIStore((s) => s.openQuickCapture)
+  const openCommandPalette = useUIStore((s) => s.openCommandPalette)
 
   const today = new Date()
   const dateFormatted = today.toLocaleDateString('en-US', {
@@ -57,6 +58,23 @@ export const DashboardHeader: React.FC = () => {
             <span className="text-text">Knowledge</span>
           </span>
         </div>
+
+        {/* Cloud Auth Status Pill */}
+        <AuthPill />
+
+        {/* Command Palette Trigger */}
+        <button
+          type="button"
+          onClick={openCommandPalette}
+          className="flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-surface-2 border border-[rgba(255,255,255,0.08)] text-text-muted hover:text-text hover:bg-surface-3 transition-all text-xs font-mono"
+          title="Search Command Palette (Cmd+K)"
+        >
+          <Search className="w-3.5 h-3.5 text-action" />
+          <span className="hidden sm:inline">Search</span>
+          <kbd className="px-1 py-0.2 rounded bg-surface border border-[rgba(255,255,255,0.1)] text-[10px] text-text-faint">
+            ⌘K
+          </kbd>
+        </button>
 
         {/* Quick Capture Button */}
         <button

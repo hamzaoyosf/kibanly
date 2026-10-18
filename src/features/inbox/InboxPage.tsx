@@ -1,23 +1,32 @@
 import React, { useState } from 'react'
-import { Inbox, CheckCircle2, Plus, Sparkles, Archive } from 'lucide-react'
-import { useInbox } from './useInbox'
+import { Inbox, CheckCircle2, Plus, Sparkles, Archive, Loader2, Cpu } from 'lucide-react'
+import { useInbox, useBatchAICategorizeInbox } from './useInbox'
 import { InboxRow } from './InboxRow'
 import { useUIStore } from '@/app/store/uiStore'
+import { GeminiConfigModal, isGeminiConfigured } from '@/services/ai'
+import { RenewalAlertBanner } from '@/features/capital/components/RenewalAlertBanner'
 import { cn } from '@/lib/utils'
 
 export const InboxPage: React.FC = () => {
   const { data: items = [], isLoading } = useInbox()
   const { openQuickCapture } = useUIStore()
   const [activeTab, setActiveTab] = useState<'unprocessed' | 'processed'>('unprocessed')
+  const [isConfigModalOpen, setConfigModalOpen] = useState(false)
+  const batchCategorizeMutation = useBatchAICategorizeInbox()
 
-  const unprocessedItems = items.filter(
-    (item) => item.status === 'unprocessed'
-  )
-  const processedItems = items.filter(
-    (item) => item.status === 'processed'
-  )
+  const unprocessedItems = items.filter((item) => item.status === 'unprocessed')
+  const processedItems = items.filter((item) => item.status === 'processed')
 
   const displayedItems = activeTab === 'unprocessed' ? unprocessedItems : processedItems
+
+  const handleBatchCategorize = () => {
+    if (!isGeminiConfigured()) {
+      setConfigModalOpen(true)
+      return
+    }
+    const itemsToClassify = unprocessedItems.map((i) => ({ id: i.id, text: i.text }))
+    batchCategorizeMutation.mutate(itemsToClassify)
+  }
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto py-2">
@@ -37,8 +46,34 @@ export const InboxPage: React.FC = () => {
           </p>
         </div>
 
-        {/* Capture Action Button */}
-        <div className="flex items-center space-x-3">
+        {/* Action Controls */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* AI Connection Status Pill */}
+          <button
+            type="button"
+            onClick={() => setConfigModalOpen(true)}
+            className={cn(
+              'flex items-center space-x-1.5 px-3 py-1.5 rounded-chip text-xs font-mono border transition-all',
+              isGeminiConfigured()
+                ? 'bg-action/10 border-action/30 text-action hover:bg-action/20'
+                : 'bg-amber-500/10 border-amber-500/30 text-amber-300 hover:bg-amber-500/20'
+            )}
+            title="Click to manage Gemini API credentials"
+          >
+            {isGeminiConfigured() ? (
+              <>
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Gemini Active</span>
+              </>
+            ) : (
+              <>
+                <Cpu className="w-3.5 h-3.5" />
+                <span>Offline Engine • Connect AI</span>
+              </>
+            )}
+          </button>
+
+          {/* Capture Action Button */}
           <button
             type="button"
             onClick={openQuickCapture}
@@ -56,8 +91,11 @@ export const InboxPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex items-center justify-between">
+      {/* Capital Hub Renewal Alerts */}
+      <RenewalAlertBanner />
+
+      {/* Tabs & Batch Actions */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center space-x-2 p-1 bg-surface-2 rounded-xl border border-[rgba(255,255,255,0.06)]">
           <button
             type="button"
@@ -93,6 +131,33 @@ export const InboxPage: React.FC = () => {
             </span>
           </button>
         </div>
+
+        {/* Batch Auto-Sort Button */}
+        {activeTab === 'unprocessed' && unprocessedItems.length > 0 && (
+          <button
+            type="button"
+            onClick={handleBatchCategorize}
+            disabled={batchCategorizeMutation.isPending}
+            className={cn(
+              'flex items-center space-x-1.5 px-3 py-1.5 rounded-chip text-xs font-medium',
+              'border border-action/30 bg-action/10 text-action hover:bg-action hover:text-black hover:border-transparent',
+              'transition-all duration-150 active:scale-95'
+            )}
+            title="Batch classify all unprocessed items using Gemini AI"
+          >
+            {batchCategorizeMutation.isPending ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <span>Classifying {unprocessedItems.length} items...</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>AI Auto-Sort All ({unprocessedItems.length})</span>
+              </>
+            )}
+          </button>
+        )}
       </div>
 
       {/* Item List / Loading / Empty State */}
@@ -105,7 +170,11 @@ export const InboxPage: React.FC = () => {
       ) : displayedItems.length > 0 ? (
         <div className="space-y-3">
           {displayedItems.map((item) => (
-            <InboxRow key={item.id} item={item} />
+            <InboxRow
+              key={item.id}
+              item={item}
+              onOpenGeminiConfig={() => setConfigModalOpen(true)}
+            />
           ))}
         </div>
       ) : activeTab === 'unprocessed' ? (
@@ -131,6 +200,12 @@ export const InboxPage: React.FC = () => {
           No processed items yet.
         </div>
       )}
+
+      {/* Gemini Configuration Modal */}
+      <GeminiConfigModal
+        isOpen={isConfigModalOpen}
+        onClose={() => setConfigModalOpen(false)}
+      />
     </div>
   )
 }

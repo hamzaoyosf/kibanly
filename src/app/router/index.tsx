@@ -2,7 +2,6 @@ import { lazy } from 'react'
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { BentoShell } from '../layout/BentoShell'
 import { ErrorPage } from '../layout/ErrorPage'
-import { PlaceholderView } from '@/components/ui/PlaceholderView'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
 
 // Secondary Hub pages remain code-split for on-demand modular loading
@@ -20,6 +19,9 @@ const CapitalHubPage = lazy(() =>
 )
 const KnowledgeHubPage = lazy(() =>
   import('@/features/knowledge/KnowledgeHubPage').then((m) => ({ default: m.KnowledgeHubPage }))
+)
+const SettingsPage = lazy(() =>
+  import('@/features/settings/SettingsPage').then((m) => ({ default: m.SettingsPage }))
 )
 
 export const router = createBrowserRouter([
@@ -62,7 +64,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'settings',
-        element: <PlaceholderView title="Settings" subtitle="Preferences & Sync coming soon" />,
+        element: <SettingsPage />,
       },
       {
         path: '*',

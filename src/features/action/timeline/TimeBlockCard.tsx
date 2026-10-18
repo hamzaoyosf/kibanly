@@ -1,6 +1,6 @@
 import React from 'react'
 import { useDraggable } from '@dnd-kit/core'
-import { Trash2, Pencil } from 'lucide-react'
+import { Trash2, Pencil, Calendar } from 'lucide-react'
 import { PositionedTimeBlock } from './layoutBlocks'
 import { TimeBlock, TimeBlockCategory } from '@/data/ports/schemas'
 import { cn } from '@/lib/utils'
@@ -102,9 +102,14 @@ export const TimeBlockCard: React.FC<TimeBlockCardProps> = ({
     >
       <div className="flex items-start justify-between gap-1">
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-semibold leading-tight truncate text-text">
-            {block.title}
-          </p>
+          <div className="flex items-center space-x-1">
+            {block.gcal?.eventId && (
+              <Calendar className="w-3 h-3 text-action shrink-0" />
+            )}
+            <p className="text-xs font-semibold leading-tight truncate text-text">
+              {block.title}
+            </p>
+          </div>
           <p className="text-[10px] font-mono mt-0.5 text-text-muted">
             {timeLabel}
           </p>
@@ -148,14 +153,21 @@ export const TimeBlockCard: React.FC<TimeBlockCardProps> = ({
       </div>
 
       {heightPx > 40 && (
-        <span
-          className={cn(
-            'self-start uppercase tracking-wider font-mono text-[9px] px-1 py-0.2 rounded',
-            styles.text
+        <div className="flex items-center space-x-1 self-start">
+          <span
+            className={cn(
+              'uppercase tracking-wider font-mono text-[9px] px-1 py-0.2 rounded',
+              styles.text
+            )}
+          >
+            {block.category.replace('_', ' ')}
+          </span>
+          {block.source === 'gcal' && (
+            <span className="font-mono text-[9px] uppercase px-1 py-0.2 rounded bg-surface-2 text-text-faint border border-[rgba(255,255,255,0.06)]">
+              GCal
+            </span>
           )}
-        >
-          {block.category.replace('_', ' ')}
-        </span>
+        </div>
       )}
     </div>
   )

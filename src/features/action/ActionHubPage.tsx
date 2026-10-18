@@ -14,7 +14,7 @@ import {
   CollisionDetection,
 } from '@dnd-kit/core'
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable'
-import { Zap, Kanban as KanbanIcon, Grid, Clock, Plus, Filter } from 'lucide-react'
+import { Zap, Kanban as KanbanIcon, Grid, Clock, Plus, Filter, CalendarCheck } from 'lucide-react'
 import { Task, GTDList, TaskStatus, EisenhowerQuadrant, TimeBlock } from '@/data/ports/schemas'
 import { useTasks, useUpdateTask } from './useTasks'
 import { useTimeBlocks, useCreateTimeBlock, useUpdateTimeBlock } from './useTimeBlocks'
@@ -22,7 +22,9 @@ import { KanbanBoard } from './KanbanBoard'
 import { EisenhowerGrid } from './EisenhowerGrid'
 import { TaskCard } from './TaskCard'
 import { TaskModal } from './TaskModal'
+import { WeeklyReviewWizard } from './components/WeeklyReviewWizard'
 import { TimelineView } from './timeline/TimelineView'
+import { useUIStore } from '@/app/store/uiStore'
 import { cn } from '@/lib/utils'
 
 type ActionViewMode = 'kanban' | 'eisenhower' | 'timeline'
@@ -30,6 +32,7 @@ type ActionViewMode = 'kanban' | 'eisenhower' | 'timeline'
 export const ActionHubPage: React.FC = () => {
   const { data: allTasks = [], isLoading } = useTasks()
   const updateTaskMutation = useUpdateTask()
+  const openWeeklyReview = useUIStore((s) => s.openWeeklyReview)
 
   const [selectedDate, setSelectedDate] = useState<Date>(() => new Date())
   const selectedDateStr = selectedDate.toISOString().slice(0, 10)
@@ -310,6 +313,17 @@ export const ActionHubPage: React.FC = () => {
             </button>
           </div>
 
+          {/* Weekly Review Launcher */}
+          <button
+            type="button"
+            onClick={openWeeklyReview}
+            className="flex items-center space-x-1.5 px-3 py-2 rounded-chip font-medium text-xs bg-surface-2 border border-[rgba(255,255,255,0.08)] text-text-muted hover:text-growth hover:border-growth/40 transition-all active:scale-95 shadow-sm"
+            title="Launch GTD Weekly Review Wizard"
+          >
+            <CalendarCheck className="w-3.5 h-3.5 text-growth" />
+            <span className="hidden sm:inline">Weekly Review</span>
+          </button>
+
           {/* New Task Button */}
           <button
             type="button"
@@ -407,6 +421,9 @@ export const ActionHubPage: React.FC = () => {
         onClose={() => setIsModalOpen(false)}
         taskToEdit={taskToEdit}
       />
+
+      {/* GTD Weekly Review Wizard */}
+      <WeeklyReviewWizard />
     </div>
   )
 }

@@ -4,16 +4,20 @@ import {
   Calendar as CalendarIcon,
   ChevronLeft,
   ChevronRight,
+  Sparkles,
 } from 'lucide-react'
 import { GrowthStatsHeader } from './components/GrowthStatsHeader'
 import { HabitTracker } from './components/HabitTracker'
 import { EnergyAuditCard } from './components/EnergyAuditCard'
 import { WellnessRadar } from './components/WellnessRadar'
+import { WeeklyEnergyInsightCard } from './components/WeeklyEnergyInsightCard'
+import { GrowthPresetsModal } from './components/GrowthPresetsModal'
 import { cn } from '@/lib/utils'
 import { formatYYYYMMDD } from '@/lib/wellnessScore'
 
 export const GrowthHubPage: React.FC = () => {
   const [selectedDateObj, setSelectedDateObj] = useState<Date>(() => new Date())
+  const [isPresetsOpen, setIsPresetsOpen] = useState(false)
   const selectedDateStr = formatYYYYMMDD(selectedDateObj)
 
   const isToday = selectedDateStr === formatYYYYMMDD(new Date())
@@ -59,50 +63,61 @@ export const GrowthHubPage: React.FC = () => {
           </p>
         </div>
 
-        {/* Date Navigation Bar */}
-        <div className="flex items-center space-x-2 p-1.5 rounded-xl bg-surface-2 border border-[rgba(255,255,255,0.06)] self-start md:self-auto">
+        {/* Header Controls: Date Navigation & Presets Modal Trigger */}
+        <div className="flex flex-wrap items-center gap-2.5 self-start md:self-auto">
           <button
             type="button"
-            onClick={handlePrevDay}
-            className="p-1.5 rounded-lg border border-[rgba(255,255,255,0.06)] bg-surface text-text-muted hover:text-text hover:bg-surface-2 transition-colors"
-            title="Previous day"
+            onClick={() => setIsPresetsOpen(true)}
+            className="flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-growth/10 hover:bg-growth/20 border border-growth/30 text-growth text-xs font-semibold font-mono transition-all shadow-sm"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Presets & Routines</span>
           </button>
 
-          <div className="flex items-center space-x-2 px-2">
-            <CalendarIcon className="w-4 h-4 text-growth" />
-            <span className="font-mono text-xs font-semibold text-text whitespace-nowrap">
-              {formattedDate}
-            </span>
-            {isToday && (
-              <span className="text-[10px] font-mono text-growth uppercase font-semibold px-1.5 py-0.2 rounded bg-growth/10 border border-growth/30">
-                Today
+          <div className="flex items-center space-x-2 p-1.5 rounded-xl bg-surface-2 border border-[rgba(255,255,255,0.06)]">
+            <button
+              type="button"
+              onClick={handlePrevDay}
+              className="p-1.5 rounded-lg border border-[rgba(255,255,255,0.06)] bg-surface text-text-muted hover:text-text hover:bg-surface-2 transition-colors"
+              title="Previous day"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+
+            <div className="flex items-center space-x-2 px-2">
+              <CalendarIcon className="w-4 h-4 text-growth" />
+              <span className="font-mono text-xs font-semibold text-text whitespace-nowrap">
+                {formattedDate}
               </span>
-            )}
+              {isToday && (
+                <span className="text-[10px] font-mono text-growth uppercase font-semibold px-1.5 py-0.2 rounded bg-growth/10 border border-growth/30">
+                  Today
+                </span>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={handleToday}
+              className={cn(
+                'px-2.5 py-1 rounded-lg text-xs font-semibold font-mono border transition-all',
+                isToday
+                  ? 'bg-growth/20 text-growth border-growth/40'
+                  : 'bg-surface text-text-muted border-[rgba(255,255,255,0.06)] hover:text-text'
+              )}
+            >
+              Today
+            </button>
+
+            <button
+              type="button"
+              onClick={handleNextDay}
+              className="p-1.5 rounded-lg border border-[rgba(255,255,255,0.06)] bg-surface text-text-muted hover:text-text hover:bg-surface-2 transition-colors"
+              title="Next day"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
           </div>
-
-          <button
-            type="button"
-            onClick={handleToday}
-            className={cn(
-              'px-2.5 py-1 rounded-lg text-xs font-semibold font-mono border transition-all',
-              isToday
-                ? 'bg-growth/20 text-growth border-growth/40'
-                : 'bg-surface text-text-muted border-[rgba(255,255,255,0.06)] hover:text-text'
-            )}
-          >
-            Today
-          </button>
-
-          <button
-            type="button"
-            onClick={handleNextDay}
-            className="p-1.5 rounded-lg border border-[rgba(255,255,255,0.06)] bg-surface text-text-muted hover:text-text hover:bg-surface-2 transition-colors"
-            title="Next day"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
         </div>
       </div>
 
@@ -122,6 +137,16 @@ export const GrowthHubPage: React.FC = () => {
           <WellnessRadar selectedDate={selectedDateStr} />
         </div>
       </div>
+
+      {/* Weekly AI Vitality & Energy Insights */}
+      <WeeklyEnergyInsightCard selectedDate={selectedDateStr} />
+
+      {/* Growth Presets & Routines Modal */}
+      <GrowthPresetsModal
+        isOpen={isPresetsOpen}
+        onClose={() => setIsPresetsOpen(false)}
+        selectedDate={selectedDateStr}
+      />
     </div>
   )
 }

@@ -3,6 +3,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { repos } from '@/data'
 import { InboxItem } from '@/data/ports/schemas'
 import { classifyInboxItemSync } from './mockAiCategorizer'
+import {
+  classifyInboxItemWithAI,
+  batchClassifyInboxItems,
+  isGeminiConfigured,
+} from '@/services/ai'
+import { usePreferencesStore } from '@/app/store/preferencesStore'
 import { generateId } from '@/lib/id'
 
 export const INBOX_QUERY_KEY = ['inbox']
@@ -31,16 +37,45 @@ export function useCreateInboxItem() {
 
   return useMutation({
     mutationFn: async ({ text, source = 'quick_capture' }: { text: string; source?: string }) => {
-      const ai = classifyInboxItemSync(text)
-      return repos.inbox.create({
+      // 1. Instant local heuristic classification for zero-latency write
+      const initialAi = classifyInboxItemSync(text)
+      const createdItem = await repos.inbox.create({
         text,
         source,
         status: 'unprocessed',
-        ai,
+        ai: initialAi,
         processedAt: null,
         convertedTo: null,
         schemaVersion: 1,
       })
+
+      // 2. If Gemini is configured and AI auto-categorization is enabled, upgrade with live AI inference in the background
+      const isAutoCategorizeEnabled = usePreferencesStore.getState?.()?.aiAutoCategorize ?? true
+      if (isGeminiConfigured() && isAutoCategorizeEnabled) {
+        classifyInboxItemWithAI(text, { fallbackToHeuristic: false })
+          .then(async (aiResult) => {
+            await repos.inbox.update(createdItem.id, {
+              ai: {
+                category: aiResult.category,
+                priority: aiResult.priority,
+                suggestedDue: aiResult.suggestedDue || null,
+                confidence: aiResult.confidence,
+                model: aiResult.model,
+                accepted: null,
+                reasoning: aiResult.reasoning,
+                tags: aiResult.tags,
+                suggestedQuadrant: aiResult.suggestedQuadrant,
+                estimateMin: aiResult.estimateMin,
+              },
+            })
+            queryClient.invalidateQueries({ queryKey: INBOX_QUERY_KEY })
+          })
+          .catch((err) => {
+            console.debug('[Inbox] Background Gemini classification skipped/failed:', err)
+          })
+      }
+
+      return createdItem
     },
     // Sub-100ms optimistic cache update (SRS FR-INB-02)
     onMutate: async (newCapture) => {
@@ -74,23 +109,85 @@ export function useCreateInboxItem() {
   })
 }
 
+export function useAICategorizeInboxItem() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ itemId, text }: { itemId: string; text: string }) => {
+      const result = await classifyInboxItemWithAI(text, { fallbackToHeuristic: false })
+      await repos.inbox.update(itemId, {
+        ai: {
+          category: result.category,
+          priority: result.priority,
+          suggestedDue: result.suggestedDue || null,
+          confidence: result.confidence,
+          model: result.model,
+          accepted: true,
+          reasoning: result.reasoning,
+          tags: result.tags,
+          suggestedQuadrant: result.suggestedQuadrant,
+          estimateMin: result.estimateMin,
+        },
+      })
+      return result
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: INBOX_QUERY_KEY })
+    },
+  })
+}
+
+export function useBatchAICategorizeInbox() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (items: Array<{ id: string; text: string }>) => {
+      const results = await batchClassifyInboxItems(items)
+      for (const [id, result] of results.entries()) {
+        await repos.inbox.update(id, {
+          ai: {
+            category: result.category,
+            priority: result.priority,
+            suggestedDue: result.suggestedDue || null,
+            confidence: result.confidence,
+            model: result.model,
+            accepted: true,
+            reasoning: result.reasoning,
+            tags: result.tags,
+            suggestedQuadrant: result.suggestedQuadrant,
+            estimateMin: result.estimateMin,
+          },
+        })
+      }
+      return results
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: INBOX_QUERY_KEY })
+    },
+  })
+}
+
 export function useConvertToTask() {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async (inboxItem: InboxItem) => {
-      // 1. Create GTD Task
+      const ai = inboxItem.ai
+
+      // 1. Create GTD Task with rich AI context
       const task = await repos.tasks.create({
         title: inboxItem.text,
-        notes: `Converted from Inbox capture (${inboxItem.id})`,
+        notes: ai?.reasoning
+          ? `[AI Context]: ${ai.reasoning}\nConverted from Inbox capture (${inboxItem.id})`
+          : `Converted from Inbox capture (${inboxItem.id})`,
         status: 'draft',
         gtdList: 'next',
-        quadrant: null,
-        priority: inboxItem.ai?.priority || 'medium',
-        dueDate: inboxItem.ai?.suggestedDue || null,
-        estimateMin: 15,
+        quadrant: ai?.suggestedQuadrant || (ai?.priority === 'high' ? 'do' : null),
+        priority: ai?.priority || 'medium',
+        dueDate: ai?.suggestedDue || null,
+        estimateMin: ai?.estimateMin || 15,
         context: ['@computer'],
-        tags: ['inbox-capture'],
+        tags: ai?.tags && ai.tags.length > 0 ? ai.tags : ['inbox-capture'],
         projectId: null,
         areaId: null,
         waitingFor: null,
