@@ -68,84 +68,84 @@ export interface AppRepos {
 
 function createLocalRepos(): AppRepos {
   const inbox = new LocalStorageRepo<InboxItem>(
-    'oyosf:v1:inbox',
+    'KiBANLY:v1:inbox',
     InboxItemSchema,
     'inb',
     seedInboxItems
   )
 
   const tasks = new LocalStorageRepo<Task>(
-    'oyosf:v1:tasks',
+    'KiBANLY:v1:tasks',
     TaskSchema,
     'tsk',
     seedTasks
   )
 
   const timeBlocks = new LocalStorageRepo<TimeBlock>(
-    'oyosf:v1:timeBlocks',
+    'KiBANLY:v1:timeBlocks',
     TimeBlockSchema,
     'blk',
     seedTimeBlocks
   )
 
   const habits = new LocalStorageRepo<Habit>(
-    'oyosf:v1:habits',
+    'KiBANLY:v1:habits',
     HabitSchema,
     'hab',
     seedHabits
   )
 
   const habitLogs = new LocalStorageRepo<HabitLog>(
-    'oyosf:v1:habitLogs',
+    'KiBANLY:v1:habitLogs',
     HabitLogSchema,
     'hlog',
     seedHabitLogs
   )
 
   const energyLogs = new LocalStorageRepo<EnergyLog>(
-    'oyosf:v1:energyLogs',
+    'KiBANLY:v1:energyLogs',
     EnergyLogSchema,
     'elog',
     seedEnergyLogs
   )
 
   const transactions = new LocalStorageRepo<Transaction>(
-    'oyosf:v1:transactions',
+    'KiBANLY:v1:transactions',
     TransactionSchema,
     'txn',
     seedTransactions
   )
 
   const subscriptions = new LocalStorageRepo<Subscription>(
-    'oyosf:v1:subscriptions',
+    'KiBANLY:v1:subscriptions',
     SubscriptionSchema,
     'sub',
     seedSubscriptions
   )
 
   const milestones = new LocalStorageRepo<Milestone>(
-    'oyosf:v1:milestones',
+    'KiBANLY:v1:milestones',
     MilestoneSchema,
     'ms',
     seedMilestones
   )
 
   const notes = new LocalStorageRepo<Note>(
-    'oyosf:v1:notes',
+    'KiBANLY:v1:notes',
     NoteSchema,
     'not',
     seedNotes
   )
 
   const resources = new LocalStorageRepo<Resource>(
-    'oyosf:v1:resources',
+    'KiBANLY:v1:resources',
     ResourceSchema,
     'res',
     seedResources
   )
 
   const tags = new LocalStorageRepo<Tag>(
-    'oyosf:v1:tags',
+    'KiBANLY:v1:tags',
     TagSchema,
     'tag',
     seedTags

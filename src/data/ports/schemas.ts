@@ -111,7 +111,7 @@ export const TimeBlockCategoryEnum = z.enum([
 ])
 export type TimeBlockCategory = z.infer<typeof TimeBlockCategoryEnum>
 
-export const TimeBlockSourceEnum = z.enum(['oyosf', 'gcal'])
+export const TimeBlockSourceEnum = z.enum(['KiBANLY', 'gcal'])
 export type TimeBlockSource = z.infer<typeof TimeBlockSourceEnum>
 
 export const GCalMetadataSchema = z.object({
@@ -130,7 +130,7 @@ export const TimeBlockSchema = z.object({
   start: z.string(), // ISO-8601 string
   end: z.string(),   // ISO-8601 string
   taskId: z.string().nullable().optional(),
-  source: TimeBlockSourceEnum.default('oyosf'),
+  source: TimeBlockSourceEnum.default('KiBANLY'),
   gcal: GCalMetadataSchema.nullable().optional(),
   createdAt: z.string(),
   updatedAt: z.string().default(() => new Date().toISOString()),

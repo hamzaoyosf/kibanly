@@ -57,7 +57,7 @@ export const HubRail: React.FC = () => {
           >
             {isExpanded ? (
               <span className="font-mono text-sm font-semibold tracking-wider text-text">
-                OYOSF
+                KiBANLY
               </span>
             ) : (
               <span className="font-mono text-xs font-bold text-text">O</span>
