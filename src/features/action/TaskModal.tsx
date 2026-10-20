@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { X, CheckSquare } from 'lucide-react'
+import { X, CheckSquare, RefreshCw } from 'lucide-react'
 import { Task, TaskStatus, GTDList, EisenhowerQuadrant, Priority } from '@/data/ports/schemas'
 import { useCreateTask, useUpdateTask } from './useTasks'
 import { cn } from '@/lib/utils'
@@ -18,6 +18,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, taskToEdi
   const [quadrant, setQuadrant] = useState<EisenhowerQuadrant>(null)
   const [priority, setPriority] = useState<Priority>('medium')
   const [estimateMin, setEstimateMin] = useState<number>(15)
+  const [scheduledDate, setScheduledDate] = useState<string>('')
 
   const createMutation = useCreateTask()
   const updateMutation = useUpdateTask()
@@ -31,6 +32,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, taskToEdi
       setQuadrant(taskToEdit.quadrant)
       setPriority(taskToEdit.priority)
       setEstimateMin(taskToEdit.estimateMin || 15)
+      setScheduledDate(taskToEdit.scheduledDate || taskToEdit.dueDate || '')
     } else {
       setTitle('')
       setNotes('')
@@ -39,6 +41,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, taskToEdi
       setQuadrant(null)
       setPriority('medium')
       setEstimateMin(15)
+      setScheduledDate('')
     }
   }, [taskToEdit, isOpen])
 
@@ -59,6 +62,8 @@ export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, taskToEdi
           quadrant,
           priority,
           estimateMin,
+          scheduledDate: scheduledDate || null,
+          dueDate: scheduledDate || null,
         },
       })
     } else {
@@ -70,7 +75,8 @@ export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, taskToEdi
         quadrant,
         priority,
         estimateMin,
-        dueDate: null,
+        dueDate: scheduledDate || null,
+        scheduledDate: scheduledDate || null,
         context: ['@computer'],
         tags: [],
         projectId: null,
@@ -116,6 +122,15 @@ export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, taskToEdi
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
+          {taskToEdit?.srsGroupId && (
+            <div className="flex items-center space-x-2 px-3 py-2 rounded-xl bg-action/10 border border-action/30 text-action text-xs font-mono">
+              <RefreshCw className="w-3.5 h-3.5 shrink-0" />
+              <span>
+                Spaced Repetition ({taskToEdit.srsRole === 'parent' ? 'Base Task' : 'Review Task'})
+              </span>
+            </div>
+          )}
+
           <div>
             <label className="block text-xs font-medium text-text-muted mb-1">Title</label>
             <input
@@ -213,6 +228,23 @@ export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, taskToEdi
               onChange={(e) => setEstimateMin(Number(e.target.value))}
               className="w-full px-3 py-2 rounded-xl bg-surface-2 border border-[rgba(255,255,255,0.08)] text-sm text-text focus:outline-none focus:border-action/60 font-mono"
             />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-text-muted mb-1">
+              Scheduled Date / Due Date
+            </label>
+            <input
+              type="date"
+              value={scheduledDate}
+              onChange={(e) => setScheduledDate(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl bg-surface-2 border border-[rgba(255,255,255,0.08)] text-sm text-text focus:outline-none focus:border-action/60 font-mono"
+            />
+            {taskToEdit?.srsRole === 'parent' && (
+              <p className="text-[11px] text-text-faint mt-1">
+                Updating this date will automatically reschedule all linked child review cards (+1d, +14d, +60d).
+              </p>
+            )}
           </div>
 
           {/* Footer */}

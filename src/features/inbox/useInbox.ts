@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { addDays, format, parseISO } from 'date-fns'
 import { repos } from '@/data'
 import { InboxItem } from '@/data/ports/schemas'
 import { classifyInboxItemSync } from './mockAiCategorizer'
@@ -12,6 +13,33 @@ import { usePreferencesStore } from '@/app/store/preferencesStore'
 import { generateId } from '@/lib/id'
 
 export const INBOX_QUERY_KEY = ['inbox']
+
+export function extractCleanTaskNotes(aiReasoning?: string | null, fallbackText?: string): string {
+  if (aiReasoning) {
+    // Strip all bracketed context tags [AI Context: ...], [Next Action], etc.
+    let cleaned = aiReasoning.replace(/\[[^\]]*\]/g, '')
+    // Strip any robotic metadata, route messages, or status strings
+    cleaned = cleaned.replace(/Converted from Inbox capture.*/gi, '')
+    cleaned = cleaned.replace(/Heuristically routed to.*/gi, '')
+    cleaned = cleaned.replace(/Routed to \w+ as.*/gi, '')
+    cleaned = cleaned.replace(/^\s*[-:•]\s*/, '')
+    cleaned = cleaned.replace(/\s+/g, ' ').trim()
+    if (cleaned.length > 0) return cleaned
+  }
+  if (fallbackText) {
+    return fallbackText.trim()
+  }
+  return ''
+}
+
+export interface ConvertToTaskParams {
+  item: InboxItem
+  enableSrs?: boolean
+  scheduledDate?: string | null
+  title?: string
+}
+
+export type ConvertToTaskArg = InboxItem | ConvertToTaskParams
 
 export function useInbox() {
   const queryClient = useQueryClient()
@@ -66,6 +94,9 @@ export function useCreateInboxItem() {
                 tags: aiResult.tags,
                 suggestedQuadrant: aiResult.suggestedQuadrant,
                 estimateMin: aiResult.estimateMin,
+                context: aiResult.context,
+                hub: aiResult.hub,
+                estimatedTime: aiResult.estimatedTime,
               },
             })
             queryClient.invalidateQueries({ queryKey: INBOX_QUERY_KEY })
@@ -127,6 +158,9 @@ export function useAICategorizeInboxItem() {
           tags: result.tags,
           suggestedQuadrant: result.suggestedQuadrant,
           estimateMin: result.estimateMin,
+          context: result.context,
+          hub: result.hub,
+          estimatedTime: result.estimatedTime,
         },
       })
       return result
@@ -156,6 +190,9 @@ export function useBatchAICategorizeInbox() {
             tags: result.tags,
             suggestedQuadrant: result.suggestedQuadrant,
             estimateMin: result.estimateMin,
+            context: result.context,
+            hub: result.hub,
+            estimatedTime: result.estimatedTime,
           },
         })
       }
@@ -171,21 +208,168 @@ export function useConvertToTask() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (inboxItem: InboxItem) => {
-      const ai = inboxItem.ai
+    mutationFn: async (arg: ConvertToTaskArg) => {
+      const inboxItem = 'text' in arg ? arg : arg.item
+      const enableSrs = 'enableSrs' in arg ? Boolean(arg.enableSrs) : false
+      const customTitle = 'title' in arg && arg.title ? arg.title.trim() : inboxItem.text.trim()
+      const providedDate = 'scheduledDate' in arg ? arg.scheduledDate : undefined
 
-      // 1. Create GTD Task with rich AI context
+      const ai = inboxItem.ai
+      const cleanNotes = extractCleanTaskNotes(ai?.reasoning, inboxItem.text)
+
+      // Determine GTD list from AI Context classification
+      let gtdList: 'next' | 'scheduled' | 'waiting' | 'someday' = 'next'
+      if (ai?.context === 'Waiting For') gtdList = 'waiting'
+      else if (ai?.context === 'Scheduled') gtdList = 'scheduled'
+      else if (ai?.context === 'Someday') gtdList = 'someday'
+      else if (ai?.context === 'Next Action') gtdList = 'next'
+
+      // Parse estimate minutes from estimatedTime if present
+      let estimateMin = ai?.estimateMin || 15
+      if (ai?.estimatedTime) {
+        if (ai.estimatedTime.endsWith('h')) {
+          const hours = parseFloat(ai.estimatedTime)
+          if (!isNaN(hours)) estimateMin = Math.round(hours * 60)
+        } else if (ai.estimatedTime.endsWith('m')) {
+          const mins = parseInt(ai.estimatedTime, 10)
+          if (!isNaN(mins)) estimateMin = mins
+        }
+      }
+
+      const effectiveDate = providedDate !== undefined ? providedDate : ai?.suggestedDue || null
+
+      if (enableSrs) {
+        // Generate unique SRS Group ID
+        const srsGroupId = `srs_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+        const baseDateStr = effectiveDate || format(new Date(), 'yyyy-MM-dd')
+        const baseDate = baseDateStr.includes('T') ? parseISO(baseDateStr) : new Date(baseDateStr + 'T00:00:00')
+
+        // 1. Create Base Parent Task
+        const parentTask = await repos.tasks.create({
+          title: customTitle,
+          notes: cleanNotes,
+          status: 'draft',
+          gtdList: 'scheduled',
+          quadrant: ai?.suggestedQuadrant || (ai?.priority === 'high' ? 'do' : null),
+          priority: ai?.priority || 'medium',
+          dueDate: baseDateStr,
+          scheduledDate: baseDateStr,
+          srsGroupId,
+          srsRole: 'parent',
+          estimateMin,
+          context: ['@computer'],
+          tags: ai?.tags && ai.tags.length > 0 ? [...ai.tags, 'srs-parent'] : ['srs-parent'],
+          projectId: null,
+          areaId: null,
+          waitingFor: null,
+          subtasks: [],
+          calendarEventId: null,
+          order: 1000,
+          completedAt: null,
+          schemaVersion: 1,
+        })
+
+        // 2. Child 1: 1st Review (24h)
+        const date1 = format(addDays(baseDate, 1), 'yyyy-MM-dd')
+        await repos.tasks.create({
+          title: `1st Review (24h): ${customTitle}`,
+          notes: `1st Review (24h spaced interval) for "${customTitle}". Revisit core concepts and verify recall.`,
+          status: 'draft',
+          gtdList: 'scheduled',
+          quadrant: 'schedule',
+          priority: ai?.priority || 'medium',
+          dueDate: date1,
+          scheduledDate: date1,
+          srsGroupId,
+          srsRole: 'child',
+          estimateMin: 15,
+          context: ['@computer'],
+          tags: ['srs-review', '24h'],
+          projectId: null,
+          areaId: null,
+          waitingFor: null,
+          subtasks: [],
+          calendarEventId: null,
+          order: 1001,
+          completedAt: null,
+          schemaVersion: 1,
+        })
+
+        // 3. Child 2: 2nd Review (2 weeks)
+        const date2 = format(addDays(baseDate, 14), 'yyyy-MM-dd')
+        await repos.tasks.create({
+          title: `2nd Review (2 weeks): ${customTitle}`,
+          notes: `2nd Review (2 weeks spaced interval) for "${customTitle}". Test retention and practical execution.`,
+          status: 'draft',
+          gtdList: 'scheduled',
+          quadrant: 'schedule',
+          priority: ai?.priority || 'medium',
+          dueDate: date2,
+          scheduledDate: date2,
+          srsGroupId,
+          srsRole: 'child',
+          estimateMin: 20,
+          context: ['@computer'],
+          tags: ['srs-review', '2w'],
+          projectId: null,
+          areaId: null,
+          waitingFor: null,
+          subtasks: [],
+          calendarEventId: null,
+          order: 1002,
+          completedAt: null,
+          schemaVersion: 1,
+        })
+
+        // 4. Child 3: 3rd Review (2 months)
+        const date3 = format(addDays(baseDate, 60), 'yyyy-MM-dd')
+        await repos.tasks.create({
+          title: `3rd Review (2 months): ${customTitle}`,
+          notes: `3rd Review (2 months spaced interval) for "${customTitle}". Verify long-term retention and mastery.`,
+          status: 'draft',
+          gtdList: 'scheduled',
+          quadrant: 'schedule',
+          priority: ai?.priority || 'medium',
+          dueDate: date3,
+          scheduledDate: date3,
+          srsGroupId,
+          srsRole: 'child',
+          estimateMin: 30,
+          context: ['@computer'],
+          tags: ['srs-review', '2m'],
+          projectId: null,
+          areaId: null,
+          waitingFor: null,
+          subtasks: [],
+          calendarEventId: null,
+          order: 1003,
+          completedAt: null,
+          schemaVersion: 1,
+        })
+
+        // 5. Mark Inbox Item as processed
+        const updatedInbox = await repos.inbox.update(inboxItem.id, {
+          status: 'processed',
+          processedAt: new Date().toISOString(),
+          convertedTo: { type: 'task', id: parentTask.id },
+        })
+
+        return { task: parentTask, updatedInbox }
+      }
+
+      // Standard Non-SRS Task Creation
       const task = await repos.tasks.create({
-        title: inboxItem.text,
-        notes: ai?.reasoning
-          ? `[AI Context]: ${ai.reasoning}\nConverted from Inbox capture (${inboxItem.id})`
-          : `Converted from Inbox capture (${inboxItem.id})`,
+        title: customTitle,
+        notes: cleanNotes,
         status: 'draft',
-        gtdList: 'next',
+        gtdList: effectiveDate ? 'scheduled' : gtdList,
         quadrant: ai?.suggestedQuadrant || (ai?.priority === 'high' ? 'do' : null),
         priority: ai?.priority || 'medium',
-        dueDate: ai?.suggestedDue || null,
-        estimateMin: ai?.estimateMin || 15,
+        dueDate: effectiveDate,
+        scheduledDate: effectiveDate,
+        srsGroupId: null,
+        srsRole: null,
+        estimateMin,
         context: ['@computer'],
         tags: ai?.tags && ai.tags.length > 0 ? ai.tags : ['inbox-capture'],
         projectId: null,
@@ -198,7 +382,7 @@ export function useConvertToTask() {
         schemaVersion: 1,
       })
 
-      // 2. Mark Inbox Item as processed
+      // Mark Inbox Item as processed
       const updatedInbox = await repos.inbox.update(inboxItem.id, {
         status: 'processed',
         processedAt: new Date().toISOString(),

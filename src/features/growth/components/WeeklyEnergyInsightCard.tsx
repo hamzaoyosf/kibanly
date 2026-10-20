@@ -65,19 +65,28 @@ export const WeeklyEnergyInsightCard: React.FC<WeeklyEnergyInsightCardProps> = (
   const { data: habits = [] } = useHabits()
   const { data: habitLogs = [] } = useHabitLogs()
 
+  // Extract the user's last 7 days of Energy and Habit logs relative to the active date
+  const sevenDaysAgo = new Date(dateObj)
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6)
+  const minDateStr = sevenDaysAgo.toISOString().slice(0, 10)
+  const maxDateStr = dateObj.toISOString().slice(0, 10)
+
+  const last7DaysEnergyLogs = energyLogs.filter((l) => l.date >= minDateStr && l.date <= maxDateStr)
+  const last7DaysHabitLogs = habitLogs.filter((l) => l.date >= minDateStr && l.date <= maxDateStr)
+
   const {
     data: insights,
     isLoading,
     refetch,
     isFetching,
   } = useQuery<AIWeeklyEnergyInsights>({
-    queryKey: ['weeklyEnergyInsights', weekKey],
+    queryKey: ['weeklyEnergyInsights', weekKey, last7DaysEnergyLogs.length, last7DaysHabitLogs.length],
     queryFn: async () => {
       return generateWeeklyEnergyInsights({
         weekKey,
-        energyLogs,
+        energyLogs: last7DaysEnergyLogs.length > 0 ? last7DaysEnergyLogs : energyLogs.slice(-7),
         habits,
-        habitLogs,
+        habitLogs: last7DaysHabitLogs.length > 0 ? last7DaysHabitLogs : habitLogs.slice(-28),
         forceRefresh: isForcingRefresh,
       })
     },

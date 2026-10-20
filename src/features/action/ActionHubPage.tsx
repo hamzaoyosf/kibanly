@@ -129,6 +129,7 @@ export const ActionHubPage: React.FC = () => {
           start: startDate.toISOString(),
           end: endDate.toISOString(),
           taskId: draggedTask.id,
+          srsGroupId: draggedTask.srsGroupId || null,
           source: 'OBOiFY',
           gcal: null,
         })

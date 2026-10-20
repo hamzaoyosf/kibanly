@@ -25,6 +25,12 @@ export type InboxStatus = z.infer<typeof InboxStatusEnum>
 export const EisenhowerQuadrantEnum = z.enum(['do', 'schedule', 'delegate', 'delete']).nullable()
 export type EisenhowerQuadrant = z.infer<typeof EisenhowerQuadrantEnum>
 
+export const InboxContextEnum = z.enum(['Next Action', 'Waiting For', 'Scheduled', 'Someday'])
+export type InboxContext = z.infer<typeof InboxContextEnum>
+
+export const HubEnum = z.enum(['Action', 'Growth', 'Capital', 'Knowledge'])
+export type Hub = z.infer<typeof HubEnum>
+
 export const InboxAISchema = z.object({
   category: InboxCategoryEnum,
   priority: PriorityEnum,
@@ -36,6 +42,9 @@ export const InboxAISchema = z.object({
   tags: z.array(z.string()).optional(),
   suggestedQuadrant: EisenhowerQuadrantEnum.optional(),
   estimateMin: z.number().optional(),
+  context: InboxContextEnum.optional(),
+  hub: HubEnum.optional(),
+  estimatedTime: z.string().optional(),
 })
 export type InboxAI = z.infer<typeof InboxAISchema>
 
@@ -85,6 +94,9 @@ export const TaskSchema = z.object({
   quadrant: EisenhowerQuadrantEnum.default(null),
   priority: PriorityEnum.default('medium'),
   dueDate: z.string().nullable().optional(),
+  scheduledDate: z.string().nullable().optional(),
+  srsGroupId: z.string().nullable().optional(),
+  srsRole: z.enum(['parent', 'child']).nullable().optional(),
   estimateMin: z.number().optional().default(0),
   context: z.array(z.string()).optional().default([]),
   tags: z.array(z.string()).optional().default([]),
@@ -135,6 +147,7 @@ export const TimeBlockSchema = z.object({
   start: z.string(), // ISO-8601 string
   end: z.string(),   // ISO-8601 string
   taskId: z.string().nullable().optional(),
+  srsGroupId: z.string().nullable().optional(),
   source: TimeBlockSourceEnum.default('OBOiFY'),
   gcal: GCalMetadataSchema.nullable().optional(),
   createdAt: z.string(),

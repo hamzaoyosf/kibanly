@@ -1,7 +1,7 @@
 import React from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Clock, CheckCircle2, Circle, Trash2 } from 'lucide-react'
+import { Clock, CheckCircle2, Circle, Trash2, RefreshCw } from 'lucide-react'
 import { Task, Priority, GTDList } from '@/data/ports/schemas'
 import { useUpdateTask, useDeleteTask } from './useTasks'
 import { cn } from '@/lib/utils'
@@ -129,11 +129,20 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, isOverlay = false, onE
 
           <span
             className={cn(
-              'text-sm font-medium leading-snug break-words text-text',
+              'text-sm font-medium leading-snug break-words text-text flex items-baseline flex-wrap gap-x-1.5',
               isDone && 'line-through text-text-muted'
             )}
           >
-            {task.title}
+            {task.srsGroupId && (
+              <span
+                className="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-action/15 text-action border border-action/30 shrink-0"
+                title={`Spaced Repetition (${task.srsRole === 'parent' ? 'SRS Base Task' : 'SRS Review Task'})`}
+              >
+                <RefreshCw className="w-2.5 h-2.5 shrink-0" />
+                <span>SRS</span>
+              </span>
+            )}
+            <span>{task.title}</span>
           </span>
         </div>
 
