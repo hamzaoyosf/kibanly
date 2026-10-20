@@ -1,7 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Bell, ArrowRight, Check, Plus, Loader2, X } from 'lucide-react'
+import { Bell, ArrowRight, Check, Plus, Loader2, X, Calendar, RotateCw } from 'lucide-react'
 import { useRenewalAlerts, RenewalAlertItem } from '@/features/capital/useRenewalAlerts'
+import {
+  useCalendarReconnectAlert,
+  requestCalendarToken,
+  isCalendarTokenExpired,
+  getCalendarToken,
+} from '@/services/calendar'
 import { cn } from '@/lib/utils'
 
 interface NotificationBellProps {
@@ -23,12 +29,32 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
     createTaskReminder,
   } = useRenewalAlerts(7)
 
+  const { needsReconnect, reason: calendarAlertReason, clearAlert } = useCalendarReconnectAlert()
+  const token = getCalendarToken()
+  const hasExpiredToken = isCalendarTokenExpired() && !!token
+  const showCalendarAlert = needsReconnect || hasExpiredToken
+
   const [isOpen, setIsOpen] = useState(false)
   const [createdTasks, setCreatedTasks] = useState<Record<string, boolean>>({})
+  const [isReconnecting, setIsReconnecting] = useState(false)
+  const [calendarError, setCalendarError] = useState<string | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  const totalAlerts = items.length
-  const isUrgent = todayCount > 0 || overdueCount > 0
+  const totalAlerts = items.length + (showCalendarAlert ? 1 : 0)
+  const isUrgent = todayCount > 0 || overdueCount > 0 || showCalendarAlert
+
+  const handleReconnectCalendar = async () => {
+    setIsReconnecting(true)
+    setCalendarError(null)
+    try {
+      await requestCalendarToken()
+      clearAlert()
+    } catch (err: any) {
+      setCalendarError(err?.message || 'Reconnect failed')
+    } finally {
+      setIsReconnecting(false)
+    }
+  }
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -191,6 +217,48 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
 
           {/* Popover Content */}
           <div className="max-h-80 overflow-y-auto divide-y divide-border/60">
+            {/* Google Calendar Reconnect Alert */}
+            {showCalendarAlert && (
+              <div className="p-3.5 bg-amber-500/10 border-b border-amber-500/20 text-xs font-mono space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center space-x-2 text-amber-400 font-bold">
+                    <Calendar className="w-4 h-4 shrink-0" />
+                    <span>Reconnect Calendar</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={clearAlert}
+                    className="text-text-muted hover:text-text p-0.5 rounded transition-colors"
+                    title="Dismiss alert"
+                    aria-label="Dismiss calendar alert"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <p className="text-[11px] text-text-muted leading-tight font-sans">
+                  {calendarAlertReason || 'Google Calendar token has expired. Reconnect to resume timeline synchronization.'}
+                </p>
+                {calendarError && (
+                  <div className="text-[10px] text-red-400 font-mono">
+                    {calendarError}
+                  </div>
+                )}
+                <button
+                  type="button"
+                  disabled={isReconnecting}
+                  onClick={handleReconnectCalendar}
+                  className="w-full flex items-center justify-center space-x-2 px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-mono text-xs font-semibold transition-all disabled:opacity-50"
+                >
+                  {isReconnecting ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <RotateCw className="w-3.5 h-3.5" />
+                  )}
+                  <span>{isReconnecting ? 'Reconnecting...' : 'Reconnect Google Calendar'}</span>
+                </button>
+              </div>
+            )}
+
             {totalAlerts === 0 ? (
               <div className="py-8 px-4 text-center space-y-2">
                 <div className="w-8 h-8 rounded-full bg-surface-2 border border-border flex items-center justify-center mx-auto text-emerald-400">

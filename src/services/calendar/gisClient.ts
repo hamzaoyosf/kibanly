@@ -1,4 +1,5 @@
 import { CalendarToken } from './types'
+import { clearCalendarReconnectAlert } from './calendarNotifications'
 
 const TOKEN_STORAGE_KEY = 'oboify_gcal_token'
 const LEGACY_TOKEN_STORAGE_KEY = 'kibanly_gcal_token'
@@ -172,6 +173,7 @@ export async function requestCalendarToken(): Promise<CalendarToken> {
           }
 
           localStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify(token))
+          clearCalendarReconnectAlert()
           resolve(token)
         },
         error_callback: (err) => {
@@ -205,5 +207,6 @@ export function disconnectCalendar(): void {
 
   if (typeof window !== 'undefined') {
     localStorage.removeItem(TOKEN_STORAGE_KEY)
+    clearCalendarReconnectAlert()
   }
 }

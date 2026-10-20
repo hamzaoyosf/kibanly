@@ -8,12 +8,14 @@ import {
 } from 'firebase/auth'
 import { auth, googleAuthProvider, isFirebaseConfigured } from '@/lib/firebase'
 import { migrateLocalToCloud } from '@/data/firebase/migrateLocalToCloud'
+import { purgeLocalData } from '@/data'
 
 export interface AuthState {
   user: User | null
   loading: boolean
   error: string | null
   isConfigured: boolean
+  isGuest: boolean
   signInWithGoogle: () => Promise<void>
   signOut: () => Promise<void>
 }
@@ -44,6 +46,10 @@ export function useAuth(): AuthState {
   const [user, setUser] = useState<User | null>(currentUserState)
   const [loading, setLoading] = useState<boolean>(!isInitialized && isFirebaseConfigured)
   const [error, setError] = useState<string | null>(null)
+  const [isGuest, setIsGuest] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false
+    return localStorage.getItem('oboify_guest_mode') === 'true'
+  })
 
   useEffect(() => {
     if (!isFirebaseConfigured) {
@@ -53,6 +59,10 @@ export function useAuth(): AuthState {
 
     const handler = (u: User | null) => {
       setUser(u)
+      if (u) {
+        setIsGuest(false)
+        localStorage.removeItem('oboify_guest_mode')
+      }
       setLoading(false)
     }
 
@@ -76,6 +86,8 @@ export function useAuth(): AuthState {
     setLoading(true)
     setError(null)
     try {
+      localStorage.removeItem('oboify_guest_mode')
+      setIsGuest(false)
       await signInWithPopup(auth, googleAuthProvider)
     } catch (err: any) {
       // Fallback to redirect if popup was blocked by mobile browser
@@ -94,15 +106,28 @@ export function useAuth(): AuthState {
   }, [])
 
   const signOut = useCallback(async () => {
-    if (!auth) return
     setLoading(true)
     try {
-      await firebaseSignOut(auth)
-      setUser(null)
+      if (auth) {
+        await firebaseSignOut(auth)
+      }
     } catch (err: any) {
-      setError(err.message || 'Sign-out failed')
+      console.warn('[OBOiFY Auth] Sign-out warning:', err)
     } finally {
+      // Complete state & storage purge for clean slate
+      try {
+        purgeLocalData()
+        localStorage.clear()
+        sessionStorage.clear()
+      } catch (e) {
+        console.error('Storage clear error:', e)
+      }
+      currentUserState = null
+      setUser(null)
+      setIsGuest(false)
       setLoading(false)
+      // Redirect to login page with an empty memory state
+      window.location.href = '/login'
     }
   }, [])
 
@@ -111,6 +136,7 @@ export function useAuth(): AuthState {
     loading,
     error,
     isConfigured: isFirebaseConfigured,
+    isGuest,
     signInWithGoogle,
     signOut,
   }

@@ -108,13 +108,18 @@ export const LoginPage: React.FC = () => {
             </div>
 
             {/* Offline Guest Mode Action */}
-            <Link
-              to="/app"
-              className="w-full flex items-center justify-center space-x-2 px-4 py-2.5 rounded-xl bg-surface-2 hover:bg-gray-700/80 border border-border text-text font-medium text-xs font-mono transition-all"
+            <button
+              type="button"
+              data-testid="guest-mode-btn"
+              onClick={() => {
+                localStorage.setItem('oboify_guest_mode', 'true')
+                navigate('/app', { replace: true })
+              }}
+              className="w-full flex items-center justify-center space-x-2 px-4 py-2.5 rounded-xl bg-surface-2 hover:bg-gray-700/80 border border-border text-text font-medium text-xs font-mono transition-all cursor-pointer"
             >
               <span>Continue as Local Guest</span>
               <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
+            </button>
           </div>
 
           {/* Privacy & Clean Slate Guarantee */}

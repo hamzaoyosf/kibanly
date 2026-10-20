@@ -17,7 +17,13 @@ import {
   ShieldCheck,
   Cpu,
   Layers,
+  AlertTriangle,
+  Trash2,
 } from 'lucide-react'
+import { collection, getDocs, writeBatch } from 'firebase/firestore'
+import { signOut as firebaseSignOut } from 'firebase/auth'
+import { db, auth } from '@/lib/firebase'
+import { purgeLocalData } from '@/data'
 import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/features/auth/useAuth'
 import { migrateLocalToCloud } from '@/data/firebase/migrateLocalToCloud'
@@ -155,6 +161,80 @@ export const SettingsPage: React.FC = () => {
   const handleDisconnectCalendar = () => {
     disconnectCalendar()
     showNotification('success', 'Google Calendar disconnected.')
+  }
+
+  const [isWipingData, setIsWipingData] = useState(false)
+
+  const handleFactoryReset = async () => {
+    const confirmed = window.confirm(
+      '⚠️ FACTORY RESET DANGER ZONE:\n\n' +
+      'This will permanently delete ALL data in both Cloud Firestore (if logged in) and LocalStorage (tasks, habits, transactions, notes, settings).\n\n' +
+      'Are you absolutely sure you want to completely wipe all data and return to a clean slate?'
+    )
+    if (!confirmed) return
+
+    setIsWipingData(true)
+    try {
+      // 1. Wipe Cloud Firestore if authenticated
+      if (db && user?.uid) {
+        const collectionsToWipe = [
+          'inbox',
+          'tasks',
+          'timeBlocks',
+          'habits',
+          'habitLogs',
+          'energyLogs',
+          'transactions',
+          'subscriptions',
+          'milestones',
+          'notes',
+          'resources',
+          'tags',
+        ]
+        for (const colName of collectionsToWipe) {
+          try {
+            const colRef = collection(db, 'users', user.uid, colName)
+            const snap = await getDocs(colRef)
+            if (!snap.empty) {
+              const docs = snap.docs
+              const CHUNK_SIZE = 400
+              for (let i = 0; i < docs.length; i += CHUNK_SIZE) {
+                const chunk = docs.slice(i, i + CHUNK_SIZE)
+                const batch = writeBatch(db)
+                chunk.forEach((d) => batch.delete(d.ref))
+                await batch.commit()
+              }
+            }
+          } catch (e) {
+            console.warn(`[Factory Reset] Error deleting collection ${colName}:`, e)
+          }
+        }
+      }
+
+      // 2. Wipe Local Storage, Session Storage, and Repositories
+      purgeLocalData()
+      localStorage.clear()
+      sessionStorage.clear()
+
+      // 3. Clear Query Client Cache
+      queryClient.clear()
+
+      // 4. Sign out Firebase session if active
+      if (auth) {
+        try {
+          await firebaseSignOut(auth)
+        } catch (e) {
+          console.warn('[Factory Reset] Signout error:', e)
+        }
+      }
+
+      // 5. Force redirect to /login with zero memory state
+      window.location.href = '/login'
+    } catch (err: any) {
+      console.error('[Factory Reset] Failed:', err)
+      showNotification('error', `Factory Reset failed: ${err?.message || 'Unknown error'}`)
+      setIsWipingData(false)
+    }
   }
 
   const CURRENCY_OPTIONS = [
@@ -602,6 +682,32 @@ export const SettingsPage: React.FC = () => {
               <span>Manage Gemini API Credentials</span>
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* Danger Zone: Factory Reset */}
+      <div className="p-5 rounded-2xl bg-red-950/20 border border-red-500/30 space-y-4">
+        <div className="flex items-center space-x-2 text-xs font-mono text-red-400 font-bold uppercase tracking-wider">
+          <AlertTriangle className="w-4 h-4 text-red-400" />
+          <span>Danger Zone • Factory Reset</span>
+        </div>
+        <p className="text-xs text-text-muted leading-relaxed font-mono">
+          Permanently erase all workspace data (tasks, habits, notes, transactions, and calendar caches) from both Cloud Firestore and local browser storage. This guarantees an absolute clean slate.
+        </p>
+        <div className="pt-1">
+          <button
+            type="button"
+            disabled={isWipingData}
+            onClick={handleFactoryReset}
+            className="flex items-center justify-center space-x-2 px-4 py-2.5 rounded-xl font-mono text-xs font-bold bg-red-600 hover:bg-red-700 active:scale-[0.98] text-white transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          >
+            {isWipingData ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Trash2 className="w-4 h-4" />
+            )}
+            <span>{isWipingData ? 'Wiping All Data...' : 'Factory Reset (Wipe All Data)'}</span>
+          </button>
         </div>
       </div>
 
