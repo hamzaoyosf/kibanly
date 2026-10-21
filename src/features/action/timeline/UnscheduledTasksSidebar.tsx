@@ -35,11 +35,10 @@ const DraggableSidebarTask: React.FC<DraggableSidebarTaskProps> = ({ task }) => 
         <p className="text-xs font-medium text-text leading-snug truncate flex items-center gap-1.5">
           {task.srsGroupId && (
             <span
-              className="inline-flex items-center space-x-1 px-1 py-0.2 rounded text-[9px] font-mono font-medium bg-action/15 text-action border border-action/30 shrink-0"
-              title={`Spaced Repetition (${task.srsRole === 'parent' ? 'SRS Base' : 'SRS Review'})`}
+              className="inline-flex items-center text-action/80 hover:text-action shrink-0"
+              title={task.srsRole === 'parent' ? 'Spaced Repetition: Base Task' : 'Spaced Repetition: Review Task'}
             >
-              <RefreshCw className="w-2.5 h-2.5 shrink-0" />
-              <span>SRS</span>
+              <RefreshCw className="w-3.5 h-3.5" />
             </span>
           )}
           <span className="truncate">{task.title}</span>

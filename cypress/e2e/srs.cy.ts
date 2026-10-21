@@ -42,8 +42,8 @@ describe('Spaced Repetition System (SRS) GTD Workflow', () => {
     cy.visit('/action')
     cy.contains('Action Hub').should('be.visible')
 
-    // 10. Verify SRS cards exist and have the SRS badge
+    // 10. Verify SRS cards exist and have the subtle SRS icon without "SRS" text
     cy.contains('Master Quantum Computing Basics').should('be.visible')
-    cy.contains('SRS').should('be.visible')
+    cy.get('[title*="Spaced Repetition"]').should('exist')
   })
 })

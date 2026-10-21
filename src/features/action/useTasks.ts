@@ -52,16 +52,6 @@ export function useUpdateTask() {
 
   return useMutation({
     mutationFn: async ({ id, patch }: { id: string; patch: Partial<Task> }) => {
-      // 1. Fetch current task to inspect SRS metadata
-      let target: Task | null = null
-      const cached = queryClient.getQueryData<Task[]>(TASKS_QUERY_KEY)
-      if (cached) {
-        target = cached.find((t) => t.id === id) || null
-      }
-      if (!target) {
-        target = await repos.tasks.get(id)
-      }
-
       // If scheduledDate is updated, ensure dueDate matches and vice-versa
       const effectiveScheduledDate =
         patch.scheduledDate !== undefined
@@ -71,31 +61,38 @@ export function useUpdateTask() {
           : undefined
 
       const effectivePatch: Partial<Task> = { ...patch }
-      if (effectiveScheduledDate !== undefined) {
-        effectivePatch.scheduledDate = effectiveScheduledDate
-        effectivePatch.dueDate = effectiveScheduledDate
+      if (effectiveScheduledDate !== undefined && effectiveScheduledDate !== null) {
+        const cleanDate = String(effectiveScheduledDate).trim().split('T')[0]
+        effectivePatch.scheduledDate = cleanDate
+        effectivePatch.dueDate = cleanDate
       }
 
-      // Update the target task
+      // Update Zustand taskStore directly (which also updates state & triggers cascade)
+      useTaskStore.getState().updateTask(id, effectivePatch)
+
+      // Fetch target from repository or store
+      const target =
+        (await repos.tasks.get(id)) ||
+        useTaskStore.getState().tasks.find((t) => t.id === id)
+
+      // Update the target task in repository
       const updated = await repos.tasks.update(id, effectivePatch)
 
-      // 2. Cascade Reschedule: If a 'parent' task's date is updated, recalculate child tasks (+1d, +14d, +60d)
-      const dateChanged =
+      // Cascade Reschedule: If a 'parent' task's date is updated, recalculate child tasks (+1d, +14d, +60d)
+      if (
         target?.srsGroupId &&
-        target.srsRole === 'parent' &&
-        effectiveScheduledDate !== undefined &&
-        effectiveScheduledDate !== null &&
-        effectiveScheduledDate !== (target.scheduledDate || target.dueDate)
-
-      if (dateChanged && target?.srsGroupId && effectiveScheduledDate) {
+        (target.srsRole === 'parent' || !target.srsRole) &&
+        effectivePatch.scheduledDate
+      ) {
+        const parentDateStr = effectivePatch.scheduledDate
         const allRepoTasks = await repos.tasks.list()
         const childTasks = allRepoTasks.filter(
-          (t) => t.srsGroupId === target.srsGroupId && t.srsRole === 'child'
+          (t) => t.srsGroupId === target.srsGroupId && (t.srsRole === 'child' || t.id !== id)
         )
 
         for (const child of childTasks) {
           const intervalDays = getSRSIntervalDays(child)
-          const newChildDate = calculateSRSChildDate(effectiveScheduledDate, intervalDays)
+          const newChildDate = calculateSRSChildDate(parentDateStr, intervalDays)
           await repos.tasks.update(child.id, {
             scheduledDate: newChildDate,
             dueDate: newChildDate,
@@ -117,12 +114,15 @@ export function useUpdateTask() {
           ? patch.dueDate
           : undefined
 
-      const dateChanged =
+      const isParentSRS = Boolean(
         target?.srsGroupId &&
-        target.srsRole === 'parent' &&
-        effectiveScheduledDate !== undefined &&
-        effectiveScheduledDate !== null &&
-        effectiveScheduledDate !== (target.scheduledDate || target.dueDate)
+        (target.srsRole === 'parent' || !target.srsRole) &&
+        effectiveScheduledDate
+      )
+
+      const parentDateStr = effectiveScheduledDate
+        ? String(effectiveScheduledDate).trim().split('T')[0]
+        : undefined
 
       queryClient.setQueryData<Task[]>(
         TASKS_QUERY_KEY,
@@ -131,15 +131,20 @@ export function useUpdateTask() {
             return {
               ...t,
               ...patch,
-              ...(effectiveScheduledDate !== undefined && {
-                scheduledDate: effectiveScheduledDate,
-                dueDate: effectiveScheduledDate,
+              ...(parentDateStr !== undefined && {
+                scheduledDate: parentDateStr,
+                dueDate: parentDateStr,
               }),
             }
           }
-          if (dateChanged && t.srsGroupId === target.srsGroupId && t.srsRole === 'child' && effectiveScheduledDate) {
+          if (
+            isParentSRS &&
+            t.srsGroupId === target?.srsGroupId &&
+            (t.srsRole === 'child' || t.id !== id) &&
+            parentDateStr
+          ) {
             const intervalDays = getSRSIntervalDays(t)
-            const newChildDate = calculateSRSChildDate(effectiveScheduledDate, intervalDays)
+            const newChildDate = calculateSRSChildDate(parentDateStr, intervalDays)
             return {
               ...t,
               scheduledDate: newChildDate,
@@ -167,7 +172,10 @@ export function useDeleteTask() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      // 1. Inspect if task belongs to an SRS group
+      // 1. Sync with taskStore (Zustand)
+      useTaskStore.getState().deleteTask(id)
+
+      // 2. Inspect if task belongs to an SRS group
       let target: Task | null = null
       const cached = queryClient.getQueryData<Task[]>(TASKS_QUERY_KEY)
       if (cached) {
@@ -177,7 +185,7 @@ export function useDeleteTask() {
         target = await repos.tasks.get(id)
       }
 
-      // 2. Cascade Delete: If it has srsGroupId, delete ALL tasks sharing that srsGroupId
+      // 3. Cascade Delete: If it has srsGroupId, delete ALL tasks sharing that srsGroupId
       if (target?.srsGroupId) {
         const allTasks = await repos.tasks.list()
         const srsGroupTasks = allTasks.filter((t) => t.srsGroupId === target.srsGroupId)

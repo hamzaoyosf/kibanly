@@ -129,17 +129,16 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, isOverlay = false, onE
 
           <span
             className={cn(
-              'text-sm font-medium leading-snug break-words text-text flex items-baseline flex-wrap gap-x-1.5',
+              'text-sm font-medium leading-snug break-words text-text flex items-baseline flex-wrap',
               isDone && 'line-through text-text-muted'
             )}
           >
             {task.srsGroupId && (
               <span
-                className="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-action/15 text-action border border-action/30 shrink-0"
-                title={`Spaced Repetition (${task.srsRole === 'parent' ? 'SRS Base Task' : 'SRS Review Task'})`}
+                className="inline-flex items-center text-action/80 hover:text-action shrink-0 mr-1.5 self-center"
+                title={task.srsRole === 'parent' ? 'Spaced Repetition: Base Task' : 'Spaced Repetition: Review Task'}
               >
-                <RefreshCw className="w-2.5 h-2.5 shrink-0" />
-                <span>SRS</span>
+                <RefreshCw className="w-3.5 h-3.5" />
               </span>
             )}
             <span>{task.title}</span>
