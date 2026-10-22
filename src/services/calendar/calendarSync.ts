@@ -13,7 +13,8 @@ import {
   updateCalendarEvent,
   deleteCalendarEvent,
 } from './calendarApi'
-import { SyncResult } from './types'
+import { SyncResult, GCalEvent } from './types'
+import { markCalendarNeedsReconnect } from './calendarNotifications'
 
 function toIsoString(dateOrDateTime: { dateTime?: string; date?: string }, isEnd = false): string {
   if (dateOrDateTime.dateTime) {
@@ -28,7 +29,7 @@ function toIsoString(dateOrDateTime: { dateTime?: string; date?: string }, isEnd
 }
 
 /**
- * Inbound sync: Fetch Google Calendar events and project them into KiBANLY TimeBlocks.
+ * Inbound sync: Fetch Google Calendar events and project them into OBOiFY TimeBlocks.
  */
 export async function syncInbound(
   timeMin: string,
@@ -37,10 +38,24 @@ export async function syncInbound(
 ): Promise<{ importedCount: number; updatedCount: number; errors: string[] }> {
   const token = tokenStr || getCalendarToken()?.accessToken
   if (!token) {
-    throw new Error('NO_TOKEN: Please connect your Google Calendar first.')
+    return {
+      importedCount: 0,
+      updatedCount: 0,
+      errors: ['NO_TOKEN: Please connect your Google Calendar first.'],
+    }
   }
 
-  const events = await fetchCalendarEvents(token, timeMin, timeMax)
+  let events: GCalEvent[] = []
+  try {
+    events = await fetchCalendarEvents(token, timeMin, timeMax)
+  } catch (err: any) {
+    console.warn('[GCal Inbound] Error fetching events:', err?.message || err)
+    return {
+      importedCount: 0,
+      updatedCount: 0,
+      errors: [err?.message || 'Failed to fetch calendar events'],
+    }
+  }
   const existingBlocks = await repos.timeBlocks.list()
   const blockMapByGCalId = new Map<string, TimeBlock>()
 
@@ -62,7 +77,7 @@ export async function syncInbound(
     const existing = blockMapByGCalId.get(event.id)
 
     if (existing) {
-      // If already in KiBANLY, update start/end/title if changed in Google Calendar
+      // If already in OBOiFY, update start/end/title if changed in Google Calendar
       if (
         existing.title !== (event.summary || '(Untitled Event)') ||
         existing.start !== startIso ||
@@ -118,7 +133,7 @@ export async function syncInbound(
 }
 
 /**
- * Outbound sync: Push a single scheduled KiBANLY TimeBlock to Google Calendar.
+ * Outbound sync: Push a single scheduled OBOiFY TimeBlock to Google Calendar.
  */
 export async function pushBlockToGCal(block: TimeBlock): Promise<TimeBlock | null> {
   if (!isCalendarTokenValid()) return null
@@ -150,7 +165,7 @@ export async function pushBlockToGCal(block: TimeBlock): Promise<TimeBlock | nul
       // Create new event on Google Calendar
       const created = await createCalendarEvent(token.accessToken, {
         summary: block.title,
-        description: 'Scheduled in KiBANLY OS',
+        description: 'Scheduled in OBOiFY',
         start: { dateTime: block.start },
         end: { dateTime: block.end },
       })
@@ -172,7 +187,7 @@ export async function pushBlockToGCal(block: TimeBlock): Promise<TimeBlock | nul
 }
 
 /**
- * Delete a remote Google Calendar event when a synced TimeBlock is deleted in KiBANLY.
+ * Delete a remote Google Calendar event when a synced TimeBlock is deleted in OBOiFY.
  */
 export async function deleteRemoteGCalEvent(eventId: string): Promise<void> {
   if (!isCalendarTokenValid()) return
@@ -195,32 +210,52 @@ export async function syncTwoWay(
 
   // Handle expired token: prompt refresh
   if (!token || isCalendarTokenExpired()) {
-    token = await requestCalendarToken()
+    try {
+      token = await requestCalendarToken()
+    } catch (err: any) {
+      markCalendarNeedsReconnect('Calendar authorization expired or cancelled')
+      return {
+        importedCount: 0,
+        updatedCount: 0,
+        pushedCount: 0,
+        errors: ['Google Calendar reconnect required: ' + (err?.message || 'authorization required')],
+      }
+    }
   }
 
   const startIso = new Date(`${dateStr}T00:00:00`).toISOString()
   const endTarget = endDateStr || dateStr
   const endIso = new Date(`${endTarget}T23:59:59`).toISOString()
 
-  // 1. Inbound: fetch Google Calendar events -> save to KiBANLY
-  const inboundRes = await syncInbound(startIso, endIso, token.accessToken)
+  try {
+    // 1. Inbound: fetch Google Calendar events -> save to OBOiFY
+    const inboundRes = await syncInbound(startIso, endIso, token.accessToken)
 
-  // 2. Outbound: find KiBANLY blocks in this window that are not yet synced to GCal
-  const blocks = await repos.timeBlocks.list()
-  const localBlocksInWindow = blocks.filter(
-    (b) => b.start >= startIso && b.start <= endIso && b.source === 'KiBANLY' && !b.gcal?.eventId
-  )
+    // 2. Outbound: find OBOiFY blocks in this window that are not yet synced to GCal
+    const blocks = await repos.timeBlocks.list()
+    const localBlocksInWindow = blocks.filter(
+      (b) => b.start >= startIso && b.start <= endIso && (b.source === 'OBOiFY' || b.source === 'KiBANLY') && !b.gcal?.eventId
+    )
 
-  let pushedCount = 0
-  for (const block of localBlocksInWindow) {
-    const pushed = await pushBlockToGCal(block)
-    if (pushed) pushedCount++
-  }
+    let pushedCount = 0
+    for (const block of localBlocksInWindow) {
+      const pushed = await pushBlockToGCal(block)
+      if (pushed) pushedCount++
+    }
 
-  return {
-    importedCount: inboundRes.importedCount,
-    updatedCount: inboundRes.updatedCount,
-    pushedCount,
-    errors: inboundRes.errors,
+    return {
+      importedCount: inboundRes.importedCount,
+      updatedCount: inboundRes.updatedCount,
+      pushedCount,
+      errors: inboundRes.errors,
+    }
+  } catch (err: any) {
+    console.warn('[GCal SyncTwoWay] Sync failed:', err)
+    return {
+      importedCount: 0,
+      updatedCount: 0,
+      pushedCount: 0,
+      errors: [err?.message || 'Synchronization failed'],
+    }
   }
 }

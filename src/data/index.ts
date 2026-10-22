@@ -38,20 +38,6 @@ import { MilestoneRepo } from './ports/MilestoneRepo'
 import { NoteRepo } from './ports/NoteRepo'
 import { ResourceRepo } from './ports/ResourceRepo'
 import { TagRepo } from './ports/TagRepo'
-import {
-  seedInboxItems,
-  seedTasks,
-  seedTimeBlocks,
-  seedHabits,
-  seedHabitLogs,
-  seedEnergyLogs,
-  seedTransactions,
-  seedSubscriptions,
-  seedMilestones,
-  seedNotes,
-  seedResources,
-  seedTags,
-} from './local/seed'
 import { auth, isFirebaseConfigured } from '@/lib/firebase'
 
 export interface AppRepos {
@@ -70,22 +56,22 @@ export interface AppRepos {
 }
 
 /**
- * Creates pure LocalStorage repositories (Phase 1 MVP)
+ * Creates pure LocalStorage repositories (Phase 1 MVP) - Strictly empty initial data for clean slate
  */
 export function createLocalRepos(): AppRepos {
   return {
-    inbox: new LocalStorageRepo<InboxItem>('KiBANLY:v1:inbox', InboxItemSchema, 'inb', seedInboxItems),
-    tasks: new LocalStorageRepo<Task>('KiBANLY:v1:tasks', TaskSchema, 'tsk', seedTasks),
-    timeBlocks: new LocalStorageRepo<TimeBlock>('KiBANLY:v1:timeBlocks', TimeBlockSchema, 'blk', seedTimeBlocks),
-    habits: new LocalStorageRepo<Habit>('KiBANLY:v1:habits', HabitSchema, 'hab', seedHabits),
-    habitLogs: new LocalStorageRepo<HabitLog>('KiBANLY:v1:habitLogs', HabitLogSchema, 'hlog', seedHabitLogs),
-    energyLogs: new LocalStorageRepo<EnergyLog>('KiBANLY:v1:energyLogs', EnergyLogSchema, 'elog', seedEnergyLogs),
-    transactions: new LocalStorageRepo<Transaction>('KiBANLY:v1:transactions', TransactionSchema, 'txn', seedTransactions),
-    subscriptions: new LocalStorageRepo<Subscription>('KiBANLY:v1:subscriptions', SubscriptionSchema, 'sub', seedSubscriptions),
-    milestones: new LocalStorageRepo<Milestone>('KiBANLY:v1:milestones', MilestoneSchema, 'ms', seedMilestones),
-    notes: new LocalStorageRepo<Note>('KiBANLY:v1:notes', NoteSchema, 'not', seedNotes),
-    resources: new LocalStorageRepo<Resource>('KiBANLY:v1:resources', ResourceSchema, 'res', seedResources),
-    tags: new LocalStorageRepo<Tag>('KiBANLY:v1:tags', TagSchema, 'tag', seedTags),
+    inbox: new LocalStorageRepo<InboxItem>('OBOiFY:v1:inbox', InboxItemSchema, 'inb', []),
+    tasks: new LocalStorageRepo<Task>('OBOiFY:v1:tasks', TaskSchema, 'tsk', []),
+    timeBlocks: new LocalStorageRepo<TimeBlock>('OBOiFY:v1:timeBlocks', TimeBlockSchema, 'blk', []),
+    habits: new LocalStorageRepo<Habit>('OBOiFY:v1:habits', HabitSchema, 'hab', []),
+    habitLogs: new LocalStorageRepo<HabitLog>('OBOiFY:v1:habitLogs', HabitLogSchema, 'hlog', []),
+    energyLogs: new LocalStorageRepo<EnergyLog>('OBOiFY:v1:energyLogs', EnergyLogSchema, 'elog', []),
+    transactions: new LocalStorageRepo<Transaction>('OBOiFY:v1:transactions', TransactionSchema, 'txn', []),
+    subscriptions: new LocalStorageRepo<Subscription>('OBOiFY:v1:subscriptions', SubscriptionSchema, 'sub', []),
+    milestones: new LocalStorageRepo<Milestone>('OBOiFY:v1:milestones', MilestoneSchema, 'ms', []),
+    notes: new LocalStorageRepo<Note>('OBOiFY:v1:notes', NoteSchema, 'not', []),
+    resources: new LocalStorageRepo<Resource>('OBOiFY:v1:resources', ResourceSchema, 'res', []),
+    tags: new LocalStorageRepo<Tag>('OBOiFY:v1:tags', TagSchema, 'tag', []),
   }
 }
 
@@ -112,7 +98,7 @@ export function createFirestoreRepos(): AppRepos {
 /**
  * Helper to wrap local and cloud repos in a seamless delegator that
  * routes to Firestore when an authenticated cloud session is active,
- * or falls back to LocalStorage when unauthenticated or offline.
+ * or falls back to LocalStorage when offline.
  */
 function createDelegatingRepo<T extends { id: string }>(
   localRepo: Repo<T>,
@@ -137,6 +123,27 @@ function createDelegatingRepo<T extends { id: string }>(
       return active.subscribe ? active.subscribe(cb) : () => {}
     },
   }
+}
+
+/**
+ * Completely purges all local repository records and cache keys from browser storage
+ */
+export function purgeLocalData(): void {
+  if (typeof window === 'undefined' || !window.localStorage) return
+  const keysToRemove: string[] = []
+  for (let i = 0; i < window.localStorage.length; i++) {
+    const k = window.localStorage.key(i)
+    if (
+      k &&
+      (k.startsWith('OBOiFY:') ||
+        k.startsWith('oboify_') ||
+        k.startsWith('kibanly_') ||
+        k.startsWith('KiBANLY:'))
+    ) {
+      keysToRemove.push(k)
+    }
+  }
+  keysToRemove.forEach((k) => window.localStorage.removeItem(k))
 }
 
 /**

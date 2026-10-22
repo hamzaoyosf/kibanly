@@ -62,7 +62,7 @@ export const GeminiConfigModal: React.FC<GeminiConfigModalProps> = ({
             </span>
             <div>
               <h2 className="text-base font-semibold text-text">
-                Gemini AI Configuration
+                AI Assistant Configuration
               </h2>
               <p className="text-xs text-text-muted">
                 Powers Inbox Auto-Categorization & Growth Vitality Insights
@@ -95,15 +95,15 @@ export const GeminiConfigModal: React.FC<GeminiConfigModalProps> = ({
           <div className="space-y-1">
             <p className="font-semibold">
               {isGeminiConfigured()
-                ? 'Gemini AI is Connected & Active'
-                : 'Offline Heuristic Engine Active'}
+                ? 'AI Assistant is Connected & Active'
+                : 'Private Local Mode Active'}
             </p>
             <p className="opacity-90 leading-relaxed text-[11px]">
               {isGeminiConfigured()
-                ? `Using Google GenAI (gemini-1.5-flash). ${
-                    isEnvConfigured ? 'Supplied via .env.local file.' : 'Custom key saved in browser storage.'
+                ? `AI Assistant is active and ready. ${
+                    isEnvConfigured ? 'Connected via system configuration.' : 'Custom API key saved in browser storage.'
                   }`
-                : 'Without an API key, KiBANLY runs its offline heuristic parser. Connect your free Google AI Studio key below for high-fidelity reasoning.'}
+                : 'Without an API key, OBOiFY runs locally in private mode. Connect your free AI key below to unlock intelligent sorting and weekly insights.'}
             </p>
           </div>
         </div>
@@ -112,7 +112,7 @@ export const GeminiConfigModal: React.FC<GeminiConfigModalProps> = ({
         <form onSubmit={handleSave} className="space-y-4">
           <div>
             <label className="block text-xs font-mono font-medium text-text-muted mb-1.5">
-              GOOGLE AI STUDIO API KEY
+              AI ASSISTANT API KEY
             </label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-text-muted">

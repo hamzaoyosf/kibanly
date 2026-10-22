@@ -15,7 +15,7 @@ import {
 } from '@/data/ports/schemas'
 import { QueryClient } from '@tanstack/react-query'
 
-export interface KiBANLYBackupDomains {
+export interface OBOiFYBackupDomains {
   inbox: InboxItem[]
   tasks: Task[]
   timeBlocks: TimeBlock[]
@@ -29,26 +29,28 @@ export interface KiBANLYBackupDomains {
   resources: Resource[]
   tags: Tag[]
 }
+export type KiBANLYBackupDomains = OBOiFYBackupDomains
 
-export interface KiBANLYBackupPayload {
+export interface OBOiFYBackupPayload {
   version: 1
   exportedAt: string
-  app: 'KiBANLY OS'
-  itemCounts: Record<keyof KiBANLYBackupDomains, number>
-  domains: KiBANLYBackupDomains
+  app: 'OBOiFY' | 'OBOiFY OS' | 'KiBANLY OS'
+  itemCounts: Record<keyof OBOiFYBackupDomains, number>
+  domains: OBOiFYBackupDomains
 }
+export type KiBANLYBackupPayload = OBOiFYBackupPayload
 
 export interface ImportResult {
   success: boolean
   totalImported: number
-  itemCounts: Partial<Record<keyof KiBANLYBackupDomains, number>>
+  itemCounts: Partial<Record<keyof OBOiFYBackupDomains, number>>
   error?: string
 }
 
 /**
- * Exports all KiBANLY domain data to a downloadable JSON file.
+ * Exports all OBOiFY domain data to a downloadable JSON file.
  */
-export async function exportData(): Promise<KiBANLYBackupPayload> {
+export async function exportData(): Promise<OBOiFYBackupPayload> {
   const [
     inbox,
     tasks,
@@ -77,7 +79,7 @@ export async function exportData(): Promise<KiBANLYBackupPayload> {
     repos.tags.list(),
   ])
 
-  const domains: KiBANLYBackupDomains = {
+  const domains: OBOiFYBackupDomains = {
     inbox,
     tasks,
     timeBlocks,
@@ -92,7 +94,7 @@ export async function exportData(): Promise<KiBANLYBackupPayload> {
     tags,
   }
 
-  const itemCounts: Record<keyof KiBANLYBackupDomains, number> = {
+  const itemCounts: Record<keyof OBOiFYBackupDomains, number> = {
     inbox: inbox.length,
     tasks: tasks.length,
     timeBlocks: timeBlocks.length,
@@ -107,10 +109,10 @@ export async function exportData(): Promise<KiBANLYBackupPayload> {
     tags: tags.length,
   }
 
-  const payload: KiBANLYBackupPayload = {
+  const payload: OBOiFYBackupPayload = {
     version: 1,
     exportedAt: new Date().toISOString(),
-    app: 'KiBANLY OS',
+    app: 'OBOiFY',
     itemCounts,
     domains,
   }
@@ -124,7 +126,7 @@ export async function exportData(): Promise<KiBANLYBackupPayload> {
     const a = document.createElement('a')
     const dateStamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
     a.href = url
-    a.download = `kibanly-backup-${dateStamp}.json`
+    a.download = `oboify-backup-${dateStamp}.json`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
@@ -135,7 +137,7 @@ export async function exportData(): Promise<KiBANLYBackupPayload> {
 }
 
 /**
- * Imports and merges a KiBANLY JSON backup into the active repositories.
+ * Imports and merges an OBOiFY JSON backup into the active repositories.
  */
 export async function importData(
   jsonContent: string,
@@ -144,15 +146,15 @@ export async function importData(
   try {
     const parsed = JSON.parse(jsonContent)
 
-    const domains: Partial<KiBANLYBackupDomains> =
+    const domains: Partial<OBOiFYBackupDomains> =
       parsed.domains && typeof parsed.domains === 'object' ? parsed.domains : parsed
 
-    const counts: Partial<Record<keyof KiBANLYBackupDomains, number>> = {}
+    const counts: Partial<Record<keyof OBOiFYBackupDomains, number>> = {}
     let total = 0
 
     // Import helper per domain
     const importDomain = async <T extends { id: string }>(
-      domainKey: keyof KiBANLYBackupDomains,
+      domainKey: keyof OBOiFYBackupDomains,
       items: T[] | undefined,
       repo: any
     ) => {

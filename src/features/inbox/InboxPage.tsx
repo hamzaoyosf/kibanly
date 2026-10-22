@@ -4,7 +4,6 @@ import { useInbox, useBatchAICategorizeInbox } from './useInbox'
 import { InboxRow } from './InboxRow'
 import { useUIStore } from '@/app/store/uiStore'
 import { GeminiConfigModal, isGeminiConfigured } from '@/services/ai'
-import { RenewalAlertBanner } from '@/features/capital/components/RenewalAlertBanner'
 import { cn } from '@/lib/utils'
 
 export const InboxPage: React.FC = () => {
@@ -58,17 +57,17 @@ export const InboxPage: React.FC = () => {
                 ? 'bg-action/10 border-action/30 text-action hover:bg-action/20'
                 : 'bg-amber-500/10 border-amber-500/30 text-amber-300 hover:bg-amber-500/20'
             )}
-            title="Click to manage Gemini API credentials"
+            title="Configure AI Assistant credentials"
           >
             {isGeminiConfigured() ? (
               <>
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>Gemini Active</span>
+                <span>AI Assistant Active</span>
               </>
             ) : (
               <>
                 <Cpu className="w-3.5 h-3.5" />
-                <span>Offline Engine • Connect AI</span>
+                <span>Local Mode • Connect AI</span>
               </>
             )}
           </button>
@@ -90,9 +89,6 @@ export const InboxPage: React.FC = () => {
           </button>
         </div>
       </div>
-
-      {/* Capital Hub Renewal Alerts */}
-      <RenewalAlertBanner />
 
       {/* Tabs & Batch Actions */}
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -143,7 +139,7 @@ export const InboxPage: React.FC = () => {
               'border border-action/30 bg-action/10 text-action hover:bg-action hover:text-black hover:border-transparent',
               'transition-all duration-150 active:scale-95'
             )}
-            title="Batch classify all unprocessed items using Gemini AI"
+            title="Batch classify all unprocessed items using AI Assistant"
           >
             {batchCategorizeMutation.isPending ? (
               <>

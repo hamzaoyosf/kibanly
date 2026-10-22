@@ -12,9 +12,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'pwa-192x192.png', 'pwa-512x512.png', '_redirects'],
       manifest: {
-        name: 'KiBANLY OS',
-        short_name: 'KiBANLY',
-        description: 'KiBANLY Personal Operating System — Command Center for Action, Growth, Capital, and Knowledge',
+        name: 'OBOiFY',
+        short_name: 'OBOiFY',
+        description: 'OBOiFY Personal Operating System — Command Center for Action, Growth, Capital, and Knowledge',
         theme_color: '#000000',
         background_color: '#000000',
         display: 'standalone',

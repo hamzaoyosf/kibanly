@@ -21,7 +21,30 @@ export const usePreferencesStore = create<PreferencesState>()(
       setDailyGoalTasks: (count) => set({ dailyGoalTasks: count }),
     }),
     {
-      name: 'kibanly_user_preferences',
+      name: 'oboify_user_preferences',
+      storage: {
+        getItem: (name) => {
+          if (typeof window === 'undefined') return null
+          const existing = localStorage.getItem(name)
+          if (existing) return JSON.parse(existing)
+          const legacy = localStorage.getItem('kibanly_user_preferences')
+          if (legacy) {
+            localStorage.setItem(name, legacy)
+            return JSON.parse(legacy)
+          }
+          return null
+        },
+        setItem: (name, value) => {
+          if (typeof window !== 'undefined') {
+            localStorage.setItem(name, JSON.stringify(value))
+          }
+        },
+        removeItem: (name) => {
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem(name)
+          }
+        },
+      },
     }
   )
 )

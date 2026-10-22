@@ -41,7 +41,7 @@ export const WeeklyReviewWizard: React.FC = () => {
   // Step 3: Big Rocks / Focus
   const [bigRocks, setBigRocks] = useState<string[]>(() => {
     try {
-      const saved = localStorage.getItem('kibanly_weekly_big_rocks')
+      const saved = localStorage.getItem('oboify_weekly_big_rocks') || localStorage.getItem('kibanly_weekly_big_rocks')
       return saved ? JSON.parse(saved) : ['', '', '']
     } catch {
       return ['', '', '']
@@ -52,8 +52,8 @@ export const WeeklyReviewWizard: React.FC = () => {
   if (!isWeeklyReviewOpen) return null
 
   const handleFinishReview = () => {
-    localStorage.setItem('kibanly_weekly_big_rocks', JSON.stringify(bigRocks))
-    localStorage.setItem('kibanly_last_weekly_review_at', new Date().toISOString())
+    localStorage.setItem('oboify_weekly_big_rocks', JSON.stringify(bigRocks))
+    localStorage.setItem('oboify_last_weekly_review_at', new Date().toISOString())
     setIsCompleted(true)
     setTimeout(() => {
       setIsCompleted(false)

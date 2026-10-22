@@ -1,7 +1,8 @@
 import React from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Clock, CheckCircle2, Circle, Trash2 } from 'lucide-react'
+import { Clock, CheckCircle2, Circle, Trash2, RefreshCw, AlertCircle, Calendar } from 'lucide-react'
+import { format } from 'date-fns'
 import { Task, Priority, GTDList } from '@/data/ports/schemas'
 import { useUpdateTask, useDeleteTask } from './useTasks'
 import { cn } from '@/lib/utils'
@@ -74,6 +75,12 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, isOverlay = false, onE
   const gtdMeta = getGTDListBadge(task.gtdList)
   const isDone = task.status === 'done'
 
+  // Task 3: Visual Guilt (Overdue UI) for Recall Tasks
+  const todayStr = format(new Date(), 'yyyy-MM-dd')
+  const taskDateStr = (task.scheduledDate || task.dueDate || '').trim().split('T')[0]
+  const isRecallTask = Boolean(task.recallRole || task.recallGroupId || task.srsRole || task.srsGroupId)
+  const isOverdueRecall = Boolean(isRecallTask && !isDone && taskDateStr && taskDateStr < todayStr)
+
   const handleToggleDone = (e: React.MouseEvent) => {
     e.stopPropagation()
     const nextStatus = isDone ? 'in_progress' : 'done'
@@ -107,7 +114,8 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, isOverlay = false, onE
         'hover:border-border-strong',
         isDragging && 'opacity-30 border-action/40',
         isOverlay && 'shadow-2xl border-action/50 bg-surface-2 ring-1 ring-action/50 cursor-grabbing rotate-1',
-        isDone && 'opacity-60 bg-surface/30'
+        isDone && 'opacity-60 bg-surface/30',
+        isOverdueRecall && 'border-danger/70 bg-danger/[0.04] shadow-[0_0_12px_rgba(244,63,94,0.18)] hover:border-danger'
       )}
       data-hub="action"
     >
@@ -129,11 +137,29 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, isOverlay = false, onE
 
           <span
             className={cn(
-              'text-sm font-medium leading-snug break-words text-text',
-              isDone && 'line-through text-text-muted'
+              'text-sm font-medium leading-snug break-words text-text flex items-baseline flex-wrap',
+              isDone && 'line-through text-text-muted',
+              isOverdueRecall && 'text-danger'
             )}
           >
-            {task.title}
+            {isRecallTask && (
+              <span
+                className={cn(
+                  'inline-flex items-center shrink-0 mr-1.5 self-center transition-colors',
+                  isOverdueRecall ? 'text-danger animate-pulse' : 'text-action/80 hover:text-action'
+                )}
+                title={
+                  isOverdueRecall
+                    ? 'Recall Overdue! Review loop is at risk'
+                    : (task.recallRole || task.srsRole) === 'parent'
+                    ? 'Recall Loop: Base Task'
+                    : 'Recall Loop: Review Task'
+                }
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+              </span>
+            )}
+            <span>{task.title}</span>
           </span>
         </div>
 
@@ -157,6 +183,14 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, isOverlay = false, onE
 
       {/* Metadata Badges */}
       <div className="mt-3 flex flex-wrap items-center gap-1.5 pt-2 border-t border-[rgba(255,255,255,0.04)] text-[11px] font-mono">
+        {/* Overdue Warning Badge (Visual Guilt) */}
+        {isOverdueRecall && (
+          <span className="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded-chip border border-danger/40 bg-danger/10 text-danger text-[10px] font-semibold">
+            <AlertCircle className="w-3 h-3" />
+            <span>Overdue ({taskDateStr})</span>
+          </span>
+        )}
+
         {/* GTD List */}
         <span
           className={cn(
@@ -184,6 +218,14 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, isOverlay = false, onE
             <span>{task.estimateMin}m</span>
           </span>
         ) : null}
+
+        {/* Scheduled / Due Date when not overdue */}
+        {!isOverdueRecall && taskDateStr && (
+          <span className="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded bg-surface-2 text-text-faint text-[10px]">
+            <Calendar className="w-3 h-3" />
+            <span>{taskDateStr}</span>
+          </span>
+        )}
 
         {/* Subtask count */}
         {totalSubtasks > 0 && (

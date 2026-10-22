@@ -1,14 +1,45 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { formatDistanceToNow } from 'date-fns'
-import { CheckSquare, Trash2, ArrowRight, Sparkles, Loader2, Calendar, Target } from 'lucide-react'
+import { CheckSquare, Trash2, ArrowRight, Sparkles, Loader2, Calendar, Target, Clock, Compass } from 'lucide-react'
 import { InboxItem } from '@/data/ports/schemas'
 import { useConvertToTask, useDeleteInboxItem, useAICategorizeInboxItem } from './useInbox'
+import { ConvertTaskModal } from './ConvertTaskModal'
 import { isGeminiConfigured } from '@/services/ai'
 import { cn } from '@/lib/utils'
 
 interface InboxRowProps {
   item: InboxItem
   onOpenGeminiConfig?: () => void
+}
+
+function getHubBadgeColor(hub?: string) {
+  switch (hub) {
+    case 'Action':
+      return 'text-sky-400 bg-sky-950/40 border-sky-800/40'
+    case 'Growth':
+      return 'text-emerald-400 bg-emerald-950/40 border-emerald-800/40'
+    case 'Capital':
+      return 'text-amber-400 bg-amber-950/40 border-amber-800/40'
+    case 'Knowledge':
+      return 'text-purple-400 bg-purple-950/40 border-purple-800/40'
+    default:
+      return 'text-text-muted bg-surface-2 border-border'
+  }
+}
+
+function getContextBadgeColor(context?: string) {
+  switch (context) {
+    case 'Next Action':
+      return 'text-emerald-300 bg-emerald-900/30 border-emerald-700/40'
+    case 'Waiting For':
+      return 'text-amber-300 bg-amber-900/30 border-amber-700/40'
+    case 'Scheduled':
+      return 'text-sky-300 bg-sky-900/30 border-sky-700/40'
+    case 'Someday':
+      return 'text-slate-300 bg-slate-900/30 border-slate-700/40'
+    default:
+      return 'text-text-muted bg-surface-2 border-border'
+  }
 }
 
 function getCategoryColor(category?: string) {
@@ -32,6 +63,7 @@ function getCategoryColor(category?: string) {
 }
 
 export const InboxRow: React.FC<InboxRowProps> = ({ item, onOpenGeminiConfig }) => {
+  const [isConvertModalOpen, setIsConvertModalOpen] = useState(false)
   const convertMutation = useConvertToTask()
   const deleteMutation = useDeleteInboxItem()
   const aiCategorizeMutation = useAICategorizeInboxItem()
@@ -80,6 +112,44 @@ export const InboxRow: React.FC<InboxRowProps> = ({ item, onOpenGeminiConfig }) 
           )}
 
           <div className="mt-2.5 flex flex-wrap items-center gap-2">
+            {/* Structured Hub Badge */}
+            {item.ai?.hub && (
+              <span
+                className={cn(
+                  'inline-flex items-center space-x-1 px-2 py-0.5 rounded-chip text-[11px] font-mono font-semibold uppercase tracking-wider border',
+                  getHubBadgeColor(item.ai.hub)
+                )}
+                title={`Target Operating System Hub: ${item.ai.hub}`}
+              >
+                <Compass className="w-3 h-3 shrink-0" />
+                <span>{item.ai.hub}</span>
+              </span>
+            )}
+
+            {/* Structured GTD Context Badge */}
+            {item.ai?.context && (
+              <span
+                className={cn(
+                  'inline-flex items-center px-2 py-0.5 rounded-chip text-[11px] font-mono font-medium border',
+                  getContextBadgeColor(item.ai.context)
+                )}
+                title={`GTD Context: ${item.ai.context}`}
+              >
+                <span>{item.ai.context}</span>
+              </span>
+            )}
+
+            {/* Structured Estimated Duration */}
+            {(item.ai?.estimatedTime || item.ai?.estimateMin) && (
+              <span
+                className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-chip text-[11px] font-mono border border-border bg-surface-2 text-text-muted"
+                title="Estimated duration"
+              >
+                <Clock className="w-3 h-3 text-action shrink-0" />
+                <span>{item.ai.estimatedTime || `${item.ai.estimateMin}m`}</span>
+              </span>
+            )}
+
             {/* AI Category & Priority Chip */}
             {item.ai && (
               <span
@@ -149,8 +219,8 @@ export const InboxRow: React.FC<InboxRowProps> = ({ item, onOpenGeminiConfig }) 
                 )}
                 title={
                   isGeminiConfigured()
-                    ? 'Classify with Gemini AI'
-                    : 'Connect Gemini AI Key'
+                    ? 'Classify with AI Assistant'
+                    : 'Connect AI Assistant Key'
                 }
               >
                 {aiCategorizeMutation.isPending ? (
@@ -166,14 +236,14 @@ export const InboxRow: React.FC<InboxRowProps> = ({ item, onOpenGeminiConfig }) 
               {/* Convert to Task */}
               <button
                 type="button"
-                onClick={() => convertMutation.mutate(item)}
+                onClick={() => setIsConvertModalOpen(true)}
                 disabled={isPending}
                 className={cn(
                   'flex items-center space-x-1.5 px-3 py-1.5 rounded-chip text-xs font-medium',
                   'bg-action/15 text-action border border-action/30 hover:bg-action hover:text-black hover:border-transparent',
                   'transition-all duration-150 active:scale-95'
                 )}
-                title="Convert this item into a GTD Task"
+                title="Convert this item into a GTD Task (with Recall Loop options)"
               >
                 <span>Convert</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -193,6 +263,13 @@ export const InboxRow: React.FC<InboxRowProps> = ({ item, onOpenGeminiConfig }) 
           </button>
         </div>
       </div>
+
+      {/* Convert to Task & SRS Modal */}
+      <ConvertTaskModal
+        item={item}
+        isOpen={isConvertModalOpen}
+        onClose={() => setIsConvertModalOpen(false)}
+      />
     </div>
   )
 }

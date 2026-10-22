@@ -1,4 +1,4 @@
-import { InboxCategory, Priority, EisenhowerQuadrant } from '@/data/ports/schemas'
+import { InboxCategory, Priority, EisenhowerQuadrant, InboxContext, Hub } from '@/data/ports/schemas'
 
 export interface AICategorizedItem {
   category: InboxCategory
@@ -10,6 +10,9 @@ export interface AICategorizedItem {
   tags?: string[]
   suggestedQuadrant?: EisenhowerQuadrant
   estimateMin?: number
+  context?: InboxContext
+  hub?: Hub
+  estimatedTime?: string
 }
 
 export interface RecommendationItem {

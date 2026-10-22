@@ -3,6 +3,7 @@ import { useSubscriptions } from './useSubscriptions'
 import { Subscription } from '@/data/ports/schemas'
 import { repos } from '@/data'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { formatMoney } from '@/lib/money'
 
 export interface RenewalAlertItem {
   subscription: Subscription
@@ -44,7 +45,7 @@ export function useRenewalAlerts(horizonDays: number = 7) {
           daysUntilRenewal: diffDays,
           isOverdue: diffDays < 0,
           isToday: diffDays === 0,
-          formattedAmount: `$${(sub.amountMinor / 100).toFixed(2)}`,
+          formattedAmount: formatMoney(sub.amountMinor),
         })
       }
     }
@@ -57,7 +58,7 @@ export function useRenewalAlerts(horizonDays: number = 7) {
     return {
       items,
       totalAmountMinor: totalMinor,
-      formattedTotalAmount: `$${(totalMinor / 100).toFixed(2)}`,
+      formattedTotalAmount: formatMoney(totalMinor),
       hasRenewals: items.length > 0,
       todayCount: items.filter((i) => i.isToday).length,
       overdueCount: items.filter((i) => i.isOverdue).length,

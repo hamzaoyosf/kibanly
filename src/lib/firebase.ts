@@ -34,12 +34,12 @@ if (isFirebaseConfigured) {
     googleAuthProvider = new GoogleAuthProvider()
     googleAuthProvider.setCustomParameters({ prompt: 'select_account' })
   } catch (err) {
-    console.error('[KiBANLY Firebase] Initialization error:', err)
+    console.error('[OBOiFY Firebase] Initialization error:', err)
   }
 } else {
   if (import.meta.env.VITE_DATA_PROVIDER === 'firebase') {
     console.warn(
-      '[KiBANLY Firebase] VITE_DATA_PROVIDER is set to "firebase", but Firebase credentials in .env.local are placeholders. Running in fallback local mode.'
+      '[OBOiFY Firebase] VITE_DATA_PROVIDER is set to "firebase", but Firebase credentials in .env.local are placeholders. Running in fallback local mode.'
     )
   }
 }

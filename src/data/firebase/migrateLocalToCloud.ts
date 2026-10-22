@@ -13,6 +13,19 @@ interface DomainMapping {
 }
 
 const DOMAIN_MAPPINGS: DomainMapping[] = [
+  { storageKey: 'OBOiFY:v1:inbox', collectionName: 'inbox' },
+  { storageKey: 'OBOiFY:v1:tasks', collectionName: 'tasks' },
+  { storageKey: 'OBOiFY:v1:timeBlocks', collectionName: 'timeBlocks' },
+  { storageKey: 'OBOiFY:v1:habits', collectionName: 'habits' },
+  { storageKey: 'OBOiFY:v1:habitLogs', collectionName: 'habitLogs' },
+  { storageKey: 'OBOiFY:v1:energyLogs', collectionName: 'energyLogs' },
+  { storageKey: 'OBOiFY:v1:transactions', collectionName: 'transactions' },
+  { storageKey: 'OBOiFY:v1:subscriptions', collectionName: 'subscriptions' },
+  { storageKey: 'OBOiFY:v1:milestones', collectionName: 'milestones' },
+  { storageKey: 'OBOiFY:v1:notes', collectionName: 'notes' },
+  { storageKey: 'OBOiFY:v1:resources', collectionName: 'resources' },
+  { storageKey: 'OBOiFY:v1:tags', collectionName: 'tags' },
+  // Legacy KiBANLY keys fallback
   { storageKey: 'KiBANLY:v1:inbox', collectionName: 'inbox' },
   { storageKey: 'KiBANLY:v1:tasks', collectionName: 'tasks' },
   { storageKey: 'KiBANLY:v1:timeBlocks', collectionName: 'timeBlocks' },
@@ -40,9 +53,10 @@ export async function migrateLocalToCloud(
     return { migratedCount: 0, status: 'skipped' }
   }
 
-  const migrationKey = `kibanly:cloud_migrated_${uid}`
+  const migrationKey = `oboify:cloud_migrated_${uid}`
+  const legacyMigrationKey = `kibanly:cloud_migrated_${uid}`
   if (!force && typeof window !== 'undefined' && window.localStorage) {
-    const alreadyMigrated = window.localStorage.getItem(migrationKey)
+    const alreadyMigrated = window.localStorage.getItem(migrationKey) || window.localStorage.getItem(legacyMigrationKey)
     if (alreadyMigrated) {
       return { migratedCount: 0, status: 'skipped' }
     }
@@ -69,7 +83,7 @@ export async function migrateLocalToCloud(
           })
         }
       } catch (e) {
-        console.warn(`[KiBANLY Migration] Error parsing ${mapping.storageKey}:`, e)
+        console.warn(`[OBOiFY Migration] Error parsing ${mapping.storageKey}:`, e)
       }
     }
 
@@ -95,12 +109,12 @@ export async function migrateLocalToCloud(
     // 3. Set completion flag
     window.localStorage.setItem(migrationKey, new Date().toISOString())
     console.info(
-      `[KiBANLY Migration] Successfully migrated ${queue.length} items to Cloud Firestore for user ${uid}`
+      `[OBOiFY Migration] Successfully migrated ${queue.length} items to Cloud Firestore for user ${uid}`
     )
 
     return { migratedCount: queue.length, status: 'completed' }
   } catch (err: any) {
-    console.error('[KiBANLY Migration] Cloud migration failed:', err)
+    console.error('[OBOiFY Migration] Cloud migration failed:', err)
     return {
       migratedCount: 0,
       status: 'error',

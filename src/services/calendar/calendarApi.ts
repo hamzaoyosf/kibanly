@@ -1,4 +1,5 @@
 import { GCalEvent, GCalEventPayload } from './types'
+import { markCalendarNeedsReconnect } from './calendarNotifications'
 
 const GCAL_BASE_URL = 'https://www.googleapis.com/calendar/v3/calendars/primary/events'
 
@@ -25,7 +26,10 @@ export async function fetchCalendarEvents(
   })
 
   if (!res.ok) {
-    if (res.status === 401) {
+    if (res.status === 401 || res.status === 403) {
+      markCalendarNeedsReconnect(
+        res.status === 401 ? 'Google Calendar token expired' : 'Google Calendar access denied'
+      )
       throw new Error('UNAUTHORIZED: Google Calendar token has expired.')
     }
     const errText = await res.text()
@@ -54,7 +58,10 @@ export async function createCalendarEvent(
   })
 
   if (!res.ok) {
-    if (res.status === 401) {
+    if (res.status === 401 || res.status === 403) {
+      markCalendarNeedsReconnect(
+        res.status === 401 ? 'Google Calendar token expired' : 'Google Calendar access denied'
+      )
       throw new Error('UNAUTHORIZED: Google Calendar token has expired.')
     }
     const errText = await res.text()
@@ -84,7 +91,10 @@ export async function updateCalendarEvent(
   })
 
   if (!res.ok) {
-    if (res.status === 401) {
+    if (res.status === 401 || res.status === 403) {
+      markCalendarNeedsReconnect(
+        res.status === 401 ? 'Google Calendar token expired' : 'Google Calendar access denied'
+      )
       throw new Error('UNAUTHORIZED: Google Calendar token has expired.')
     }
     const errText = await res.text()
@@ -110,7 +120,10 @@ export async function deleteCalendarEvent(
   })
 
   if (!res.ok && res.status !== 404 && res.status !== 410) {
-    if (res.status === 401) {
+    if (res.status === 401 || res.status === 403) {
+      markCalendarNeedsReconnect(
+        res.status === 401 ? 'Google Calendar token expired' : 'Google Calendar access denied'
+      )
       throw new Error('UNAUTHORIZED: Google Calendar token has expired.')
     }
     const errText = await res.text()

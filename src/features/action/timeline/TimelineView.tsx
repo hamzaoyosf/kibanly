@@ -72,6 +72,9 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
   const unscheduledTasks = allTasks.filter(
     (t) => t.status !== 'done' && !scheduledTaskIds.has(t.id)
   )
+  const recallTaskIds = new Set(
+    allTasks.filter((t) => t.recallGroupId || t.srsGroupId).map((t) => t.id)
+  )
 
   // Calculate side-by-side positioned blocks with pixel coordinates
   const positionedBlocks = layoutTimeBlocks(dayBlocks)
@@ -124,42 +127,56 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
         </div>
 
         <div className="flex flex-wrap items-center gap-2 self-start sm:self-center">
-          {/* Google Calendar Sync Pill */}
-          <button
-            type="button"
-            onClick={() => setIsCalendarModalOpen(true)}
-            className={cn(
-              'flex items-center space-x-1.5 px-3 py-1.5 rounded-chip text-xs font-mono border transition-all',
-              isGCalActive
-                ? 'bg-action/10 border-action/30 text-action hover:bg-action/20'
-                : isGCalExpired
-                ? 'bg-amber-500/10 border-amber-500/30 text-amber-300 hover:bg-amber-500/20'
-                : 'bg-surface-2 border-[rgba(255,255,255,0.08)] text-text-muted hover:text-text'
-            )}
-            title="Manage Google Calendar 2-Way Sync"
-          >
-            {isGCalActive ? (
-              <>
+          {/* Google Calendar Sync Pill & Trigger */}
+          <div className="flex items-center space-x-1.5">
+            <button
+              type="button"
+              onClick={() => setIsCalendarModalOpen(true)}
+              className={cn(
+                'flex items-center space-x-1.5 px-3 py-1.5 rounded-chip text-xs font-mono border transition-all',
+                isGCalActive
+                  ? 'bg-action/10 border-action/30 text-action hover:bg-action/20'
+                  : isGCalExpired
+                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-300 hover:bg-amber-500/20'
+                  : 'bg-surface-2 border-[rgba(255,255,255,0.08)] text-text-muted hover:text-text'
+              )}
+              title="Manage Google Calendar 2-Way Sync"
+            >
+              {isGCalActive ? (
+                <>
+                  <CalendarIcon className="w-3.5 h-3.5 text-action" />
+                  <span>GCal Active</span>
+                </>
+              ) : isGCalExpired ? (
+                <>
+                  <AlertCircle className="w-3.5 h-3.5 text-amber-400" />
+                  <span>GCal Expired • Reconnect</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-3.5 h-3.5 text-action" />
+                  <span>{isGCalSetup ? 'Connect GCal' : 'Setup GCal'}</span>
+                </>
+              )}
+            </button>
+
+            {isGCalActive && (
+              <button
+                type="button"
+                onClick={() => syncCalendarMutation.mutate(selectedDateStr)}
+                disabled={syncCalendarMutation.isPending}
+                className="p-1.5 rounded-lg border border-[rgba(255,255,255,0.08)] bg-surface-2 text-text-muted hover:text-action hover:border-action/40 transition-colors"
+                title="Sync 2-Way with Google Calendar Now"
+              >
                 <ArrowRightLeft
                   className={cn(
                     'w-3.5 h-3.5',
-                    syncCalendarMutation.isPending && 'animate-spin'
+                    syncCalendarMutation.isPending && 'animate-spin text-action'
                   )}
                 />
-                <span>GCal Active</span>
-              </>
-            ) : isGCalExpired ? (
-              <>
-                <AlertCircle className="w-3.5 h-3.5 text-amber-400" />
-                <span>GCal Expired • Reconnect</span>
-              </>
-            ) : (
-              <>
-                <Sparkles className="w-3.5 h-3.5 text-action" />
-                <span>{isGCalSetup ? 'Connect GCal' : 'Setup GCal'}</span>
-              </>
+              </button>
             )}
-          </button>
+          </div>
 
           {/* Date Pagination */}
           <button
@@ -240,6 +257,8 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
               onDeleteBlock={(id) => deleteBlockMutation.mutate(id)}
               onEditBlock={handleOpenEdit}
               isDraggingActive={isDraggingActive}
+              srsTaskIds={recallTaskIds}
+              recallTaskIds={recallTaskIds}
             />
           </div>
         </div>

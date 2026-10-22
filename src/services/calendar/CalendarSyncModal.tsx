@@ -187,7 +187,7 @@ export const CalendarSyncModal: React.FC<CalendarSyncModalProps> = ({
                 ? `Authorized for scope: https://www.googleapis.com/auth/calendar.events. Bi-directional sync is live.`
                 : isTokenDead
                 ? 'Your Google OAuth 2.0 access token has expired. Click Reconnect below to renew synchronization without losing local data.'
-                : 'Connect your Google account to import meetings into KiBANLY and automatically push scheduled focus blocks to your calendar.'}
+                : 'Connect your Google account to import meetings into OBOiFY and automatically push scheduled focus blocks to your calendar.'}
             </p>
           </div>
         </div>

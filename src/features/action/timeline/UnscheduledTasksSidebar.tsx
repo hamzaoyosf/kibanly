@@ -1,6 +1,6 @@
 import React from 'react'
 import { useDraggable } from '@dnd-kit/core'
-import { Clock, GripVertical } from 'lucide-react'
+import { Clock, GripVertical, RefreshCw } from 'lucide-react'
 import { Task } from '@/data/ports/schemas'
 import { cn } from '@/lib/utils'
 
@@ -32,8 +32,16 @@ const DraggableSidebarTask: React.FC<DraggableSidebarTaskProps> = ({ task }) => 
       <GripVertical className="w-4 h-4 text-text-faint group-hover:text-action shrink-0 mt-0.5" />
 
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-medium text-text leading-snug truncate">
-          {task.title}
+        <p className="text-xs font-medium text-text leading-snug truncate flex items-center gap-1.5">
+          {(task.recallGroupId || task.srsGroupId) && (
+            <span
+              className="inline-flex items-center text-action/80 hover:text-action shrink-0"
+              title={(task.recallRole || task.srsRole) === 'parent' ? 'Recall Loop: Base Task' : 'Recall Loop: Review Task'}
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+            </span>
+          )}
+          <span className="truncate">{task.title}</span>
         </p>
 
         <div className="mt-2 flex items-center space-x-1.5 text-[10px] font-mono">

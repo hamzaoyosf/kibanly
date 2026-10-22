@@ -65,19 +65,28 @@ export const WeeklyEnergyInsightCard: React.FC<WeeklyEnergyInsightCardProps> = (
   const { data: habits = [] } = useHabits()
   const { data: habitLogs = [] } = useHabitLogs()
 
+  // Extract the user's last 7 days of Energy and Habit logs relative to the active date
+  const sevenDaysAgo = new Date(dateObj)
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6)
+  const minDateStr = sevenDaysAgo.toISOString().slice(0, 10)
+  const maxDateStr = dateObj.toISOString().slice(0, 10)
+
+  const last7DaysEnergyLogs = energyLogs.filter((l) => l.date >= minDateStr && l.date <= maxDateStr)
+  const last7DaysHabitLogs = habitLogs.filter((l) => l.date >= minDateStr && l.date <= maxDateStr)
+
   const {
     data: insights,
     isLoading,
     refetch,
     isFetching,
   } = useQuery<AIWeeklyEnergyInsights>({
-    queryKey: ['weeklyEnergyInsights', weekKey],
+    queryKey: ['weeklyEnergyInsights', weekKey, last7DaysEnergyLogs.length, last7DaysHabitLogs.length],
     queryFn: async () => {
       return generateWeeklyEnergyInsights({
         weekKey,
-        energyLogs,
+        energyLogs: last7DaysEnergyLogs.length > 0 ? last7DaysEnergyLogs : energyLogs.slice(-7),
         habits,
-        habitLogs,
+        habitLogs: last7DaysHabitLogs.length > 0 ? last7DaysHabitLogs : habitLogs.slice(-28),
         forceRefresh: isForcingRefresh,
       })
     },
@@ -129,17 +138,17 @@ export const WeeklyEnergyInsightCard: React.FC<WeeklyEnergyInsightCardProps> = (
                 ? 'bg-growth/10 border-growth/30 text-growth hover:bg-growth/20'
                 : 'bg-amber-500/10 border-amber-500/30 text-amber-300 hover:bg-amber-500/20'
             )}
-            title="Configure Gemini API credentials"
+            title="Configure AI Assistant credentials"
           >
             {isGeminiActive ? (
               <>
                 <Sparkles className="w-3 h-3" />
-                <span>Gemini 1.5 Flash</span>
+                <span>AI Assistant</span>
               </>
             ) : (
               <>
                 <Cpu className="w-3 h-3" />
-                <span>Offline Engine</span>
+                <span>Private Mode</span>
               </>
             )}
           </button>
@@ -165,10 +174,10 @@ export const WeeklyEnergyInsightCard: React.FC<WeeklyEnergyInsightCardProps> = (
             <Key className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
             <div className="space-y-0.5">
               <p className="font-semibold text-amber-300">
-                Running in Offline Heuristic Mode
+                Running in Private Local Mode
               </p>
               <p className="text-amber-300/80 text-[11px] leading-relaxed">
-                Add your free Google AI Studio key to unlock multi-day biometric correlation, chronotype profiling, and personalized habit nudges.
+                Connect your AI key to unlock multi-day biometric correlation, chronotype profiling, and personalized habit nudges.
               </p>
             </div>
           </div>
