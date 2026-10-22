@@ -122,11 +122,11 @@ export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, taskToEdi
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          {taskToEdit?.srsGroupId && (
+          {(taskToEdit?.recallGroupId || taskToEdit?.srsGroupId) && (
             <div className="flex items-center space-x-2 px-3 py-2 rounded-xl bg-action/10 border border-action/30 text-action text-xs font-mono">
               <RefreshCw className="w-3.5 h-3.5 shrink-0" />
               <span>
-                Spaced Repetition ({taskToEdit.srsRole === 'parent' ? 'Base Task' : 'Review Task'})
+                Recall Loop ({(taskToEdit.recallRole || taskToEdit.srsRole) === 'parent' ? 'Base Task' : 'Recall Card'})
               </span>
             </div>
           )}
@@ -240,9 +240,14 @@ export const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, taskToEdi
               onChange={(e) => setScheduledDate(e.target.value)}
               className="w-full px-3 py-2 rounded-xl bg-surface-2 border border-[rgba(255,255,255,0.08)] text-sm text-text focus:outline-none focus:border-action/60 font-mono"
             />
-            {taskToEdit?.srsRole === 'parent' && (
+            {(taskToEdit?.recallRole || taskToEdit?.srsRole) === 'parent' && (
               <p className="text-[11px] text-text-faint mt-1">
-                Updating this date will automatically reschedule all linked child review cards (+1d, +14d, +60d).
+                Updating this date will automatically reschedule linked recall cards (+1d, +14d, +60d).
+              </p>
+            )}
+            {(taskToEdit?.recallRole || taskToEdit?.srsRole) === 'child' && (
+              <p className="text-[11px] text-text-faint mt-1">
+                Cognitive anti-procrastination rules: delays ≤ 2 days apply Grace Period forward shift; delays &gt; 2 days trigger the Reset Penalty back to 1st Recall.
               </p>
             )}
           </div>

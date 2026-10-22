@@ -26,13 +26,13 @@ export const ConvertTaskModal: React.FC<ConvertTaskModalProps> = ({
   const [scheduledDate, setScheduledDate] = useState(() => {
     return item.ai?.suggestedDue || format(new Date(), 'yyyy-MM-dd')
   })
-  const [enableSrs, setEnableSrs] = useState(false)
+  const [enableRecall, setEnableRecall] = useState(false)
 
   const convertMutation = useConvertToTask()
 
   if (!isOpen) return null
 
-  // Calculate review dates for live preview
+  // Calculate recall dates for live preview
   const baseDate = scheduledDate
     ? scheduledDate.includes('T')
       ? parseISO(scheduledDate)
@@ -52,7 +52,8 @@ export const ConvertTaskModal: React.FC<ConvertTaskModalProps> = ({
         item,
         title: title.trim(),
         scheduledDate: scheduledDate || null,
-        enableSrs,
+        enableRecall,
+        enableSrs: enableRecall,
       },
       {
         onSuccess: () => {
@@ -123,32 +124,32 @@ export const ConvertTaskModal: React.FC<ConvertTaskModalProps> = ({
             </div>
           </div>
 
-          {/* SRS Checkbox / Toggle */}
+          {/* Recall Loop Checkbox / Toggle */}
           <div className="p-3.5 rounded-xl border border-[rgba(255,255,255,0.08)] bg-surface-2/40 space-y-2">
             <label className="flex items-center space-x-3 cursor-pointer select-none">
               <input
                 type="checkbox"
-                checked={enableSrs}
-                onChange={(e) => setEnableSrs(e.target.checked)}
+                checked={enableRecall}
+                onChange={(e) => setEnableRecall(e.target.checked)}
                 className="w-4 h-4 rounded border-border-strong text-action focus:ring-action bg-surface cursor-pointer"
               />
               <div className="flex-1 min-w-0">
                 <span className="text-xs font-semibold text-text flex items-center space-x-1.5">
                   <RefreshCw className="w-3.5 h-3.5 text-action" />
-                  <span>Enable Spaced Repetition (SRS)</span>
+                  <span>Enable Recall Loop</span>
                 </span>
                 <p className="text-[11px] text-text-muted mt-0.5">
-                  Automatically schedules 3 spaced review tasks at 24 hours, 2 weeks, and 2 months.
+                  Automatically schedules spaced recall tasks at 24 hours, 2 weeks, and 2 months.
                 </p>
               </div>
             </label>
 
-            {/* Live Review Cards Preview when SRS enabled */}
-            {enableSrs && (
+            {/* Live Recall Cards Preview when Recall Loop enabled */}
+            {enableRecall && (
               <div className="mt-3 pt-3 border-t border-[rgba(255,255,255,0.06)] space-y-1.5 animate-in fade-in slide-in-from-top-1 duration-150">
                 <p className="text-[10px] font-mono uppercase tracking-wider text-action font-semibold flex items-center space-x-1">
                   <Layers className="w-3 h-3" />
-                  <span>Automated SRS Review Schedule:</span>
+                  <span>Automated Recall Loop Schedule:</span>
                 </p>
 
                 <div className="space-y-1.5 text-xs font-mono">
@@ -161,21 +162,21 @@ export const ConvertTaskModal: React.FC<ConvertTaskModalProps> = ({
 
                   <div className="p-2 rounded-lg bg-action/5 border border-action/20 flex items-center justify-between text-action">
                     <span className="truncate pr-2">
-                      1st Review (24h): {title || 'Task'}
+                      1st Recall (24h): {title || 'Task'}
                     </span>
                     <span className="text-[11px] shrink-0 font-medium">{date1}</span>
                   </div>
 
                   <div className="p-2 rounded-lg bg-action/5 border border-action/20 flex items-center justify-between text-action">
                     <span className="truncate pr-2">
-                      2nd Review (2 weeks): {title || 'Task'}
+                      2nd Recall (2 weeks): {title || 'Task'}
                     </span>
                     <span className="text-[11px] shrink-0 font-medium">{date2}</span>
                   </div>
 
                   <div className="p-2 rounded-lg bg-action/5 border border-action/20 flex items-center justify-between text-action">
                     <span className="truncate pr-2">
-                      3rd Review (2 months): {title || 'Task'}
+                      3rd Recall (2 months): {title || 'Task'}
                     </span>
                     <span className="text-[11px] shrink-0 font-medium">{date3}</span>
                   </div>
@@ -204,7 +205,7 @@ export const ConvertTaskModal: React.FC<ConvertTaskModalProps> = ({
                 (!title.trim() || convertMutation.isPending) && 'opacity-50 cursor-not-allowed'
               )}
             >
-              <span>{enableSrs ? 'Convert with SRS (4 Tasks)' : 'Convert to Task'}</span>
+              <span>{enableRecall ? 'Convert with Recall Loop (4 Tasks)' : 'Convert to Task'}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>

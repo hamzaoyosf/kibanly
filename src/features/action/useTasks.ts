@@ -3,7 +3,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { repos } from '@/data'
 import { Task } from '@/data/ports/schemas'
 import { QueryOpts } from '@/data/ports/Repo'
-import { calculateSRSChildDate, getSRSIntervalDays, useTaskStore } from '@/app/store/taskStore'
+import {
+  calculateRecallChildDate,
+  getRecallIntervalDays,
+  useTaskStore,
+} from '@/app/store/taskStore'
 
 export const TASKS_QUERY_KEY = ['tasks']
 
@@ -67,40 +71,11 @@ export function useUpdateTask() {
         effectivePatch.dueDate = cleanDate
       }
 
-      // Update Zustand taskStore directly (which also updates state & triggers cascade)
+      // Delegate to taskStore.updateTask (handles Grace Period, Reset Penalty & repo persist)
       useTaskStore.getState().updateTask(id, effectivePatch)
 
-      // Fetch target from repository or store
-      const target =
-        (await repos.tasks.get(id)) ||
-        useTaskStore.getState().tasks.find((t) => t.id === id)
-
       // Update the target task in repository
-      const updated = await repos.tasks.update(id, effectivePatch)
-
-      // Cascade Reschedule: If a 'parent' task's date is updated, recalculate child tasks (+1d, +14d, +60d)
-      if (
-        target?.srsGroupId &&
-        (target.srsRole === 'parent' || !target.srsRole) &&
-        effectivePatch.scheduledDate
-      ) {
-        const parentDateStr = effectivePatch.scheduledDate
-        const allRepoTasks = await repos.tasks.list()
-        const childTasks = allRepoTasks.filter(
-          (t) => t.srsGroupId === target.srsGroupId && (t.srsRole === 'child' || t.id !== id)
-        )
-
-        for (const child of childTasks) {
-          const intervalDays = getSRSIntervalDays(child)
-          const newChildDate = calculateSRSChildDate(parentDateStr, intervalDays)
-          await repos.tasks.update(child.id, {
-            scheduledDate: newChildDate,
-            dueDate: newChildDate,
-          })
-        }
-      }
-
-      return updated
+      return await repos.tasks.update(id, effectivePatch)
     },
     onMutate: async ({ id, patch }) => {
       await queryClient.cancelQueries({ queryKey: TASKS_QUERY_KEY })
@@ -114,10 +89,11 @@ export function useUpdateTask() {
           ? patch.dueDate
           : undefined
 
-      const isParentSRS = Boolean(
-        target?.srsGroupId &&
-        (target.srsRole === 'parent' || !target.srsRole) &&
-        effectiveScheduledDate
+      const groupId = target?.recallGroupId || target?.srsGroupId
+      const role = target?.recallRole || target?.srsRole
+
+      const isParentRecall = Boolean(
+        groupId && (role === 'parent' || !role) && effectiveScheduledDate
       )
 
       const parentDateStr = effectiveScheduledDate
@@ -138,13 +114,13 @@ export function useUpdateTask() {
             }
           }
           if (
-            isParentSRS &&
-            t.srsGroupId === target?.srsGroupId &&
-            (t.srsRole === 'child' || t.id !== id) &&
+            isParentRecall &&
+            (t.recallGroupId === groupId || t.srsGroupId === groupId) &&
+            ((t.recallRole || t.srsRole) === 'child' || t.id !== id) &&
             parentDateStr
           ) {
-            const intervalDays = getSRSIntervalDays(t)
-            const newChildDate = calculateSRSChildDate(parentDateStr, intervalDays)
+            const intervalDays = getRecallIntervalDays(t)
+            const newChildDate = calculateRecallChildDate(parentDateStr, intervalDays)
             return {
               ...t,
               scheduledDate: newChildDate,
@@ -175,7 +151,7 @@ export function useDeleteTask() {
       // 1. Sync with taskStore (Zustand)
       useTaskStore.getState().deleteTask(id)
 
-      // 2. Inspect if task belongs to an SRS group
+      // 2. Inspect if task belongs to a Recall group
       let target: Task | null = null
       const cached = queryClient.getQueryData<Task[]>(TASKS_QUERY_KEY)
       if (cached) {
@@ -185,12 +161,15 @@ export function useDeleteTask() {
         target = await repos.tasks.get(id)
       }
 
-      // 3. Cascade Delete: If it has srsGroupId, delete ALL tasks sharing that srsGroupId
-      if (target?.srsGroupId) {
+      const groupId = target?.recallGroupId || target?.srsGroupId
+      // 3. Cascade Delete: If it has recallGroupId, delete ALL tasks sharing that recallGroupId
+      if (groupId) {
         const allTasks = await repos.tasks.list()
-        const srsGroupTasks = allTasks.filter((t) => t.srsGroupId === target.srsGroupId)
-        if (srsGroupTasks.length > 0) {
-          await Promise.all(srsGroupTasks.map((t) => repos.tasks.remove(t.id)))
+        const recallTasks = allTasks.filter(
+          (t) => (t.recallGroupId || t.srsGroupId) === groupId
+        )
+        if (recallTasks.length > 0) {
+          await Promise.all(recallTasks.map((t) => repos.tasks.remove(t.id)))
           return
         }
       }
@@ -202,11 +181,12 @@ export function useDeleteTask() {
       await queryClient.cancelQueries({ queryKey: TASKS_QUERY_KEY })
       const previous = queryClient.getQueryData<Task[]>(TASKS_QUERY_KEY) || []
       const target = previous.find((t) => t.id === id)
+      const groupId = target?.recallGroupId || target?.srsGroupId
 
-      if (target?.srsGroupId) {
+      if (groupId) {
         queryClient.setQueryData<Task[]>(
           TASKS_QUERY_KEY,
-          previous.filter((t) => t.srsGroupId !== target.srsGroupId)
+          previous.filter((t) => (t.recallGroupId || t.srsGroupId) !== groupId)
         )
       } else {
         queryClient.setQueryData<Task[]>(

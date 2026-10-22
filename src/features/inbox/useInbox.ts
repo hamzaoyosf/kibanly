@@ -34,6 +34,7 @@ export function extractCleanTaskNotes(aiReasoning?: string | null, fallbackText?
 
 export interface ConvertToTaskParams {
   item: InboxItem
+  enableRecall?: boolean
   enableSrs?: boolean
   scheduledDate?: string | null
   title?: string
@@ -210,7 +211,12 @@ export function useConvertToTask() {
   return useMutation({
     mutationFn: async (arg: ConvertToTaskArg) => {
       const inboxItem = 'text' in arg ? arg : arg.item
-      const enableSrs = 'enableSrs' in arg ? Boolean(arg.enableSrs) : false
+      const enableRecall =
+        'enableRecall' in arg
+          ? Boolean(arg.enableRecall)
+          : 'enableSrs' in arg
+          ? Boolean(arg.enableSrs)
+          : false
       const customTitle = 'title' in arg && arg.title ? arg.title.trim() : inboxItem.text.trim()
       const providedDate = 'scheduledDate' in arg ? arg.scheduledDate : undefined
 
@@ -238,9 +244,9 @@ export function useConvertToTask() {
 
       const effectiveDate = providedDate !== undefined ? providedDate : ai?.suggestedDue || null
 
-      if (enableSrs) {
-        // Generate unique SRS Group ID
-        const srsGroupId = `srs_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+      if (enableRecall) {
+        // Generate unique Recall Group ID
+        const recallGroupId = `recall_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
         const baseDateStr = effectiveDate || format(new Date(), 'yyyy-MM-dd')
         const baseDate = baseDateStr.includes('T') ? parseISO(baseDateStr) : new Date(baseDateStr + 'T00:00:00')
 
@@ -254,11 +260,13 @@ export function useConvertToTask() {
           priority: ai?.priority || 'medium',
           dueDate: baseDateStr,
           scheduledDate: baseDateStr,
-          srsGroupId,
+          recallGroupId,
+          recallRole: 'parent',
+          srsGroupId: recallGroupId,
           srsRole: 'parent',
           estimateMin,
           context: ['@computer'],
-          tags: ai?.tags && ai.tags.length > 0 ? [...ai.tags, 'srs-parent'] : ['srs-parent'],
+          tags: ai?.tags && ai.tags.length > 0 ? [...ai.tags, 'recall-parent'] : ['recall-parent'],
           projectId: null,
           areaId: null,
           waitingFor: null,
@@ -269,22 +277,24 @@ export function useConvertToTask() {
           schemaVersion: 1,
         })
 
-        // 2. Child 1: 1st Review (24h)
+        // 2. Child 1: 1st Recall (24h)
         const date1 = format(addDays(baseDate, 1), 'yyyy-MM-dd')
         await repos.tasks.create({
-          title: `1st Review (24h): ${customTitle}`,
-          notes: `1st Review (24h spaced interval) for "${customTitle}". Revisit core concepts and verify recall.`,
+          title: `1st Recall (24h): ${customTitle}`,
+          notes: `1st Recall (24h spaced interval) for "${customTitle}". Revisit core concepts and verify recall.`,
           status: 'draft',
           gtdList: 'scheduled',
           quadrant: 'schedule',
           priority: ai?.priority || 'medium',
           dueDate: date1,
           scheduledDate: date1,
-          srsGroupId,
+          recallGroupId,
+          recallRole: 'child',
+          srsGroupId: recallGroupId,
           srsRole: 'child',
           estimateMin: 15,
           context: ['@computer'],
-          tags: ['srs-review', '24h'],
+          tags: ['recall-review', '24h'],
           projectId: null,
           areaId: null,
           waitingFor: null,
@@ -295,22 +305,24 @@ export function useConvertToTask() {
           schemaVersion: 1,
         })
 
-        // 3. Child 2: 2nd Review (2 weeks)
+        // 3. Child 2: 2nd Recall (2 weeks)
         const date2 = format(addDays(baseDate, 14), 'yyyy-MM-dd')
         await repos.tasks.create({
-          title: `2nd Review (2 weeks): ${customTitle}`,
-          notes: `2nd Review (2 weeks spaced interval) for "${customTitle}". Test retention and practical execution.`,
+          title: `2nd Recall (2 weeks): ${customTitle}`,
+          notes: `2nd Recall (2 weeks spaced interval) for "${customTitle}". Test retention and practical execution.`,
           status: 'draft',
           gtdList: 'scheduled',
           quadrant: 'schedule',
           priority: ai?.priority || 'medium',
           dueDate: date2,
           scheduledDate: date2,
-          srsGroupId,
+          recallGroupId,
+          recallRole: 'child',
+          srsGroupId: recallGroupId,
           srsRole: 'child',
           estimateMin: 20,
           context: ['@computer'],
-          tags: ['srs-review', '2w'],
+          tags: ['recall-review', '2w'],
           projectId: null,
           areaId: null,
           waitingFor: null,
@@ -321,22 +333,24 @@ export function useConvertToTask() {
           schemaVersion: 1,
         })
 
-        // 4. Child 3: 3rd Review (2 months)
+        // 4. Child 3: 3rd Recall (2 months)
         const date3 = format(addDays(baseDate, 60), 'yyyy-MM-dd')
         await repos.tasks.create({
-          title: `3rd Review (2 months): ${customTitle}`,
-          notes: `3rd Review (2 months spaced interval) for "${customTitle}". Verify long-term retention and mastery.`,
+          title: `3rd Recall (2 months): ${customTitle}`,
+          notes: `3rd Recall (2 months spaced interval) for "${customTitle}". Verify long-term retention and mastery.`,
           status: 'draft',
           gtdList: 'scheduled',
           quadrant: 'schedule',
           priority: ai?.priority || 'medium',
           dueDate: date3,
           scheduledDate: date3,
-          srsGroupId,
+          recallGroupId,
+          recallRole: 'child',
+          srsGroupId: recallGroupId,
           srsRole: 'child',
           estimateMin: 30,
           context: ['@computer'],
-          tags: ['srs-review', '2m'],
+          tags: ['recall-review', '2m'],
           projectId: null,
           areaId: null,
           waitingFor: null,
@@ -357,7 +371,7 @@ export function useConvertToTask() {
         return { task: parentTask, updatedInbox }
       }
 
-      // Standard Non-SRS Task Creation
+      // Standard Non-Recall Task Creation
       const task = await repos.tasks.create({
         title: customTitle,
         notes: cleanNotes,
@@ -367,6 +381,8 @@ export function useConvertToTask() {
         priority: ai?.priority || 'medium',
         dueDate: effectiveDate,
         scheduledDate: effectiveDate,
+        recallGroupId: null,
+        recallRole: null,
         srsGroupId: null,
         srsRole: null,
         estimateMin,

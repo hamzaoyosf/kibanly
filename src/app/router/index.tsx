@@ -3,6 +3,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { BentoShell } from '../layout/BentoShell'
 import { ErrorPage } from '../layout/ErrorPage'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
+import { ProtectedRoute } from '@/features/auth/components/ProtectedRoute'
 
 // Public Pages (Lazy Loaded)
 const LandingPage = lazy(() =>
@@ -54,7 +55,11 @@ export const router = createBrowserRouter([
   // Protected Operating System Workspace (/app)
   {
     path: '/app',
-    element: <BentoShell />,
+    element: (
+      <ProtectedRoute>
+        <BentoShell />
+      </ProtectedRoute>
+    ),
     errorElement: <ErrorPage />,
     children: [
       {

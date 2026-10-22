@@ -98,17 +98,13 @@ export function createFirestoreRepos(): AppRepos {
 /**
  * Helper to wrap local and cloud repos in a seamless delegator that
  * routes to Firestore when an authenticated cloud session is active,
- * or falls back to LocalStorage when unauthenticated, in Guest Mode, or offline.
+ * or falls back to LocalStorage when offline.
  */
 function createDelegatingRepo<T extends { id: string }>(
   localRepo: Repo<T>,
   firestoreRepo: Repo<T>
 ): Repo<T> {
   const getActive = () => {
-    // Guest mode strictly enforces local storage only and bypasses Firestore
-    if (typeof window !== 'undefined' && localStorage.getItem('oboify_guest_mode') === 'true') {
-      return localRepo
-    }
     const isCloudRequested = import.meta.env.VITE_DATA_PROVIDER === 'firebase'
     if (isCloudRequested && isFirebaseConfigured && auth?.currentUser?.uid) {
       return firestoreRepo

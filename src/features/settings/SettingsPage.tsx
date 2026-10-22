@@ -131,7 +131,7 @@ export const SettingsPage: React.FC = () => {
     try {
       const result = await migrateLocalToCloud(user.uid, true)
       if (result.status === 'completed') {
-        showNotification('success', `Cloud sync complete! Synced ${result.migratedCount} local records to Firestore.`)
+        showNotification('success', `Cloud sync complete! Synced ${result.migratedCount} records to cloud backup.`)
         await queryClient.invalidateQueries()
       } else if (result.status === 'skipped') {
         showNotification('success', 'Cloud data is already in sync with local storage.')
@@ -168,7 +168,7 @@ export const SettingsPage: React.FC = () => {
   const handleFactoryReset = async () => {
     const confirmed = window.confirm(
       '⚠️ FACTORY RESET DANGER ZONE:\n\n' +
-      'This will permanently delete ALL data in both Cloud Firestore (if logged in) and LocalStorage (tasks, habits, transactions, notes, settings).\n\n' +
+      'This will permanently delete ALL data in both cloud backup (if logged in) and local browser storage (tasks, habits, transactions, notes, settings).\n\n' +
       'Are you absolutely sure you want to completely wipe all data and return to a clean slate?'
     )
     if (!confirmed) return
@@ -270,7 +270,7 @@ export const SettingsPage: React.FC = () => {
 
         <div className="flex items-center space-x-2 text-xs font-mono text-text-muted bg-surface-2 px-3 py-1.5 rounded-xl border border-[rgba(255,255,255,0.06)] self-start sm:self-auto">
           <span className="w-2 h-2 rounded-full bg-growth shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
-          <span>OBOiFY v0.1.0</span>
+          <span>Workspace Online</span>
         </div>
       </div>
 
@@ -309,8 +309,8 @@ export const SettingsPage: React.FC = () => {
             </div>
 
             <p className="text-xs text-text-muted leading-relaxed mt-3">
-              OBOiFY is local-first. Your Tasks, Habits, Energy Audits, Ledger Transactions,
-              and Zettelkasten Notes can be exported as a single portable JSON payload anytime.
+              Your Tasks, Habits, Energy Audits, Ledger Transactions,
+              and Notes can be exported as a single portable JSON backup anytime.
             </p>
 
             <div className="mt-4 p-3.5 rounded-xl bg-surface-2/60 border border-[rgba(255,255,255,0.06)] space-y-2 text-xs">
@@ -381,7 +381,7 @@ export const SettingsPage: React.FC = () => {
               </span>
               <div>
                 <h2 className="text-base font-semibold text-text">Account & Cloud Sync</h2>
-                <p className="text-xs text-text-muted">Google Sign-In & Firestore Replication</p>
+                <p className="text-xs text-text-muted">Google Sign-In & Seamless Cloud Backup</p>
               </div>
             </div>
 
@@ -413,7 +413,7 @@ export const SettingsPage: React.FC = () => {
                 <div className="pt-2 border-t border-border flex items-center justify-end text-[11px] font-mono">
                   <span className="text-emerald-400 flex items-center space-x-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block animate-pulse" />
-                    <span>Firestore Active</span>
+                    <span>Cloud Backup Active</span>
                   </span>
                 </div>
               </div>
@@ -421,14 +421,14 @@ export const SettingsPage: React.FC = () => {
               <div className="mt-4 p-4 rounded-xl bg-surface-2 border border-[rgba(255,255,255,0.08)] space-y-2">
                 <div className="flex items-center space-x-2 text-xs font-semibold text-text">
                   <ShieldCheck className="w-4 h-4 text-action" />
-                  <span>Local-First Offline Storage</span>
+                  <span>Works Anywhere • Total Privacy</span>
                 </div>
                 <p className="text-xs text-text-muted">
-                  Sign in with Google to replicate and synchronize your workspace across devices via Firebase Firestore.
+                  Sign in with Google to synchronize your workspace across devices with seamless cloud backup.
                 </p>
                 {!isFirebaseSetup && (
                   <p className="text-[11px] font-mono text-amber-400 pt-1">
-                    Notice: Firebase environment variables are not yet provided in .env.local.
+                    Notice: Cloud sync is unavailable until cloud settings are configured.
                   </p>
                 )}
               </div>
@@ -575,7 +575,7 @@ export const SettingsPage: React.FC = () => {
               </span>
               <div>
                 <h2 className="text-base font-semibold text-text">Preferences & AI Autonomy</h2>
-                <p className="text-xs text-text-muted">Gemini Auto-Sorting and Currency Localization</p>
+                <p className="text-xs text-text-muted">Smart Auto-Sorting and Currency Localization</p>
               </div>
             </div>
 
@@ -587,7 +587,7 @@ export const SettingsPage: React.FC = () => {
                     <span className="text-xs font-semibold text-text">AI Auto-Categorization</span>
                     {isAIActive ? (
                       <span className="text-[10px] font-mono text-growth bg-growth/20 px-1.5 py-0.2 rounded border border-growth/30">
-                        Gemini Active
+                        AI Assistant Active
                       </span>
                     ) : (
                       <span className="text-[10px] font-mono text-amber-400 bg-amber-500/20 px-1.5 py-0.2 rounded border border-amber-500/30">
@@ -679,7 +679,7 @@ export const SettingsPage: React.FC = () => {
               className="w-full flex items-center justify-center space-x-1.5 px-3.5 py-2.5 rounded-xl font-mono text-xs font-semibold bg-surface-2 hover:bg-white/10 border border-[rgba(255,255,255,0.12)] text-text transition-all"
             >
               <Cpu className="w-3.5 h-3.5 text-growth" />
-              <span>Manage Gemini API Credentials</span>
+              <span>Configure AI Assistant Settings</span>
             </button>
           </div>
         </div>
@@ -692,7 +692,7 @@ export const SettingsPage: React.FC = () => {
           <span>Danger Zone • Factory Reset</span>
         </div>
         <p className="text-xs text-text-muted leading-relaxed font-mono">
-          Permanently erase all workspace data (tasks, habits, notes, transactions, and calendar caches) from both Cloud Firestore and local browser storage. This guarantees an absolute clean slate.
+          Permanently erase all workspace data (tasks, habits, notes, transactions, and calendar caches) from both cloud backup and local browser storage. This guarantees an absolute clean slate.
         </p>
         <div className="pt-1">
           <button
@@ -711,30 +711,32 @@ export const SettingsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* System Architecture Specifications */}
+      {/* Core Capabilities */}
       <div className="p-5 rounded-2xl bg-surface-2/30 border border-[rgba(255,255,255,0.06)] space-y-3">
         <div className="flex items-center space-x-2 text-xs font-mono text-text font-semibold uppercase tracking-wider">
           <Layers className="w-4 h-4 text-action" />
-          <span>System Topology & Specifications</span>
+          <span>Core Capabilities</span>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs font-mono">
           <div className="p-3 rounded-xl bg-surface border border-[rgba(255,255,255,0.06)]">
-            <div className="text-text-muted text-[10px]">PLATFORM</div>
-            <div className="text-text font-bold mt-1">PWA Standalone</div>
+            <div className="text-text-muted text-[10px]">AVAILABILITY</div>
+            <div className="text-text font-bold mt-1">Always Accessible</div>
           </div>
           <div className="p-3 rounded-xl bg-surface border border-[rgba(255,255,255,0.06)]">
-            <div className="text-text-muted text-[10px]">STORAGE DRIVER</div>
+            <div className="text-text-muted text-[10px]">DATA & SYNC</div>
             <div className="text-text font-bold mt-1">
-              {user ? 'Cloud Firestore' : 'LocalStorage (MVP)'}
+              {user ? 'Seamless Sync' : 'Your Data, Your Control'}
             </div>
           </div>
           <div className="p-3 rounded-xl bg-surface border border-[rgba(255,255,255,0.06)]">
-            <div className="text-text-muted text-[10px]">THEME</div>
-            <div className="text-text font-bold mt-1">OLED Pure Black</div>
+            <div className="text-text-muted text-[10px]">APPEARANCE</div>
+            <div className="text-text font-bold mt-1">Focus Mode</div>
           </div>
           <div className="p-3 rounded-xl bg-surface border border-[rgba(255,255,255,0.06)]">
-            <div className="text-text-muted text-[10px]">AI ENGINE</div>
-            <div className="text-text font-bold mt-1">Gemini 1.5 Flash</div>
+            <div className="text-text-muted text-[10px]">INTELLIGENCE</div>
+            <div className="text-text font-bold mt-1">
+              {isAIActive ? 'AI Assistant' : 'Smart Brain (Local)'}
+            </div>
           </div>
         </div>
       </div>

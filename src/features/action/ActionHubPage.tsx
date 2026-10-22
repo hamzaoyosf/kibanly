@@ -122,6 +122,7 @@ export const ActionHubPage: React.FC = () => {
 
         console.log("MUTATION FIRED", startDate, endDate)
 
+        const recallGroupId = draggedTask.recallGroupId || draggedTask.srsGroupId || null
         createTimeBlockMutation.mutate({
           title: draggedTask.title,
           category: 'deep_work',
@@ -129,7 +130,8 @@ export const ActionHubPage: React.FC = () => {
           start: startDate.toISOString(),
           end: endDate.toISOString(),
           taskId: draggedTask.id,
-          srsGroupId: draggedTask.srsGroupId || null,
+          recallGroupId,
+          srsGroupId: recallGroupId,
           source: 'OBOiFY',
           gcal: null,
         })

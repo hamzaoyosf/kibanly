@@ -17,6 +17,7 @@ interface TimeGridProps {
   onDeleteBlock: (id: string) => void
   onEditBlock?: (block: TimeBlock) => void
   isDraggingActive?: boolean
+  recallTaskIds?: Set<string>
   srsTaskIds?: Set<string>
 }
 
@@ -67,6 +68,7 @@ export const TimeGrid: React.FC<TimeGridProps> = ({
   onDeleteBlock,
   onEditBlock,
   isDraggingActive = false,
+  recallTaskIds,
   srsTaskIds,
 }) => {
   const [currentTime, setCurrentTime] = useState(new Date())
@@ -161,9 +163,10 @@ export const TimeGrid: React.FC<TimeGridProps> = ({
                 onDelete={onDeleteBlock}
                 onEdit={onEditBlock}
                 isDropTargetBlocked={isDraggingActive}
-                isSRS={Boolean(
-                  pos.block.srsGroupId ||
-                    (pos.block.taskId && srsTaskIds?.has(pos.block.taskId))
+                isRecall={Boolean(
+                  pos.block.recallGroupId ||
+                    pos.block.srsGroupId ||
+                    (pos.block.taskId && (recallTaskIds?.has(pos.block.taskId) || srsTaskIds?.has(pos.block.taskId)))
                 )}
               />
             ))}

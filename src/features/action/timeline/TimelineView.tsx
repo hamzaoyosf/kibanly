@@ -72,7 +72,9 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
   const unscheduledTasks = allTasks.filter(
     (t) => t.status !== 'done' && !scheduledTaskIds.has(t.id)
   )
-  const srsTaskIds = new Set(allTasks.filter((t) => t.srsGroupId).map((t) => t.id))
+  const recallTaskIds = new Set(
+    allTasks.filter((t) => t.recallGroupId || t.srsGroupId).map((t) => t.id)
+  )
 
   // Calculate side-by-side positioned blocks with pixel coordinates
   const positionedBlocks = layoutTimeBlocks(dayBlocks)
@@ -255,7 +257,8 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
               onDeleteBlock={(id) => deleteBlockMutation.mutate(id)}
               onEditBlock={handleOpenEdit}
               isDraggingActive={isDraggingActive}
-              srsTaskIds={srsTaskIds}
+              srsTaskIds={recallTaskIds}
+              recallTaskIds={recallTaskIds}
             />
           </div>
         </div>

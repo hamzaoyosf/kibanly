@@ -138,17 +138,17 @@ export const WeeklyEnergyInsightCard: React.FC<WeeklyEnergyInsightCardProps> = (
                 ? 'bg-growth/10 border-growth/30 text-growth hover:bg-growth/20'
                 : 'bg-amber-500/10 border-amber-500/30 text-amber-300 hover:bg-amber-500/20'
             )}
-            title="Configure Gemini API credentials"
+            title="Configure AI Assistant credentials"
           >
             {isGeminiActive ? (
               <>
                 <Sparkles className="w-3 h-3" />
-                <span>Gemini 1.5 Flash</span>
+                <span>AI Assistant</span>
               </>
             ) : (
               <>
                 <Cpu className="w-3 h-3" />
-                <span>Offline Engine</span>
+                <span>Private Mode</span>
               </>
             )}
           </button>
@@ -174,10 +174,10 @@ export const WeeklyEnergyInsightCard: React.FC<WeeklyEnergyInsightCardProps> = (
             <Key className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
             <div className="space-y-0.5">
               <p className="font-semibold text-amber-300">
-                Running in Offline Heuristic Mode
+                Running in Private Local Mode
               </p>
               <p className="text-amber-300/80 text-[11px] leading-relaxed">
-                Add your free Google AI Studio key to unlock multi-day biometric correlation, chronotype profiling, and personalized habit nudges.
+                Connect your AI key to unlock multi-day biometric correlation, chronotype profiling, and personalized habit nudges.
               </p>
             </div>
           </div>

@@ -363,7 +363,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/login',
-    element: <LoginPage />, // Dedicated Google Auth & Guest Mode
+    element: <LoginPage />, // Dedicated Google Auth & Soft-UI AuthModal
   },
   {
     path: '/app',
@@ -457,7 +457,7 @@ In OBOiFY, the testing framework is **100% migrated from Playwright to Cypress v
 ```
 cypress/
   e2e/
-    01_landing_and_auth.cy.ts     # Tests landing page CTAs, Google Auth mock, and Guest mode
+    01_landing_and_auth.cy.ts     # Tests landing page CTAs, Google Auth, and Soft-UI AuthModal
     02_clean_slate.cy.ts          # Validates zero mock data on fresh account creation
     03_quick_capture.cy.ts        # Verifies 'Q' shortcut, capture latency, and inbox listing
     04_gtd_workflow.cy.ts         # Tests Inbox -> Next Actions -> Timeline drag-and-drop
@@ -466,7 +466,7 @@ cypress/
     07_activity_heatmap.cy.ts     # Verifies 365-day graph rendering and tooltip accuracy
     08_backup_roundtrip.cy.ts     # Tests full JSON export and restore integrity
   support/
-    commands.ts                   # Custom Cypress commands (cy.loginGuest, cy.cleanSlate)
+    commands.ts                   # Custom Cypress commands (cy.loginGoogle, cy.cleanSlate)
     e2e.ts
 cypress.config.ts
 ```
@@ -498,3 +498,65 @@ export default defineConfig({
   ```
 * **PWA Service Worker:** `vite-plugin-pwa` configured in `registerType: 'autoUpdate'`, precaching HTML, CSS, JS, and font assets.
 * **Theme Color:** Updated to `#111827` (Dark Gray canvas) in `manifest.webmanifest`.
+
+---
+
+## 9.0 Recall Loop Engine & Anti-Procrastination Architecture
+
+### 9.1 Data Model Extensions (`TaskSchema`)
+
+Recall Loop tasks integrate directly into the GTD flow without requiring separate data tables. Tasks carry two relational attributes:
+* `recallGroupId`: `string | null` — Deterministic group identifier linking parent and review cards (e.g., `rec_grp_1729548000_abc1`).
+* `recallRole`: `'parent' | 'child' | null` — Denotes whether the task is the root learning milestone or a subsequent spaced review card.
+
+### 9.2 The Spaced Interval Curve
+
+When converting an Inbox thought with **Enable Recall Loop**, the system creates 4 linked tasks:
+1. **Parent Milestone:** Scheduled for target learning date $D_0$ (e.g. today).
+2. **1st Recall (24h):** Scheduled for $D_0 + 1$ day. Focus: Immediate retrieval practice.
+3. **2nd Recall (2 weeks):** Scheduled for $D_0 + 14$ days. Focus: Synaptic consolidation.
+4. **3rd Recall (2 months):** Scheduled for $D_0 + 60$ days. Focus: Long-term semantic mastery.
+
+### 9.3 Cascade Invariants
+
+* **Cascade Delete:** Deleting any task containing `recallGroupId` executes a cascading delete across all tasks matching that `recallGroupId` in both Zustand memory and the underlying repository.
+* **Cascade Reschedule (Parent):** Updating the `scheduledDate` of a parent task recalculates and updates the scheduled dates of all child review cards relative to the parent's new target date:
+  $$D_{\text{child}} = \text{addDays}(D_{\text{parent\_new}}, \Delta_{\text{interval}})$$
+
+### 9.4 Anti-Procrastination Logic: Grace Period vs. Reset Penalty
+
+When a child Recall task is rescheduled to a later date, the system evaluates the latency $\Delta_{\text{days}} = D_{\text{new}} - D_{\text{old}}$:
+
+```
+                          Reschedule Child Recall Card
+                                      |
+                     +----------------+----------------+
+                     |                                 |
+              deltaDays <= 2                     deltaDays > 2
+                     |                                 |
+                     v                                 v
+            [THE GRACE PERIOD]                 [THE RESET PENALTY]
+         Forward Cascading Shift             Retention Curve Broken
+        --------------------------          --------------------------
+        Shift current card and all          - Reset card to "1st Recall (24h)"
+        subsequent child cards forward      - Delete subsequent child cards
+        by exact deltaDays.                 - Regenerate fresh +14d & +60d cards
+```
+
+1. **The Grace Period ($\Delta_{\text{days}} \le 2$):**
+   * Minimal synaptic decay.
+   * Applies **Forward Cascading Shift**: The target review card and all subsequent review cards in the sequence (`step > currentStep`) are shifted forward by $\Delta_{\text{days}}$, maintaining the downstream intervals.
+2. **The Reset Penalty ($\Delta_{\text{days}} > 2$):**
+   * Cognitive retention curve is broken due to excessive delay.
+   * Target card title is reset to `"1st Recall (24h): [Base Title]"`.
+   * All subsequent review cards (`step > currentStep`) are permanently purged.
+   * Fresh `"2nd Recall (2 weeks)"` ($D_{\text{new}} + 14$d) and `"3rd Recall (2 months)"` ($D_{\text{new}} + 60$d) child cards are created to re-establish the forgetting curve foundation.
+
+### 9.5 "Visual Guilt" Overdue UI Protocol
+
+If a task with `recallRole` (or `recallGroupId`) satisfies:
+$$D_{\text{scheduled}} < D_{\text{today}} \quad \land \quad \text{status} \ne \text{'done'}$$
+The card applies an urgent visual cue in `TaskCard.tsx`:
+* **Card Border & Glow:** `border-danger/70 bg-danger/[0.04] shadow-[0_0_12px_rgba(244,63,94,0.18)]`
+* **Pulsing Indicator:** Red rotating icon with pulsing animation (`text-danger animate-pulse`).
+* **Warning Badge:** Red badge displaying `Overdue (YYYY-MM-DD)`.

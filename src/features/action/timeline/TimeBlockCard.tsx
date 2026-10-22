@@ -11,6 +11,7 @@ interface TimeBlockCardProps {
   onDelete?: (id: string) => void
   onEdit?: (block: TimeBlock) => void
   isDropTargetBlocked?: boolean
+  isRecall?: boolean
   isSRS?: boolean
 }
 
@@ -75,6 +76,7 @@ export const TimeBlockCard: React.FC<TimeBlockCardProps> = ({
   onDelete,
   onEdit,
   isDropTargetBlocked = false,
+  isRecall = false,
   isSRS = false,
 }) => {
   const { block, topPx, heightPx, leftPct, widthPct } = positioned
@@ -82,7 +84,7 @@ export const TimeBlockCard: React.FC<TimeBlockCardProps> = ({
   const isGCalActive = isCalendarTokenValid()
   const isQueuedToPush = isGCalActive && !isFromGCal && !block.gcal?.eventId
   const isSyncedToGCal = !isFromGCal && !!block.gcal?.eventId
-  const isSRSBlock = Boolean(block.srsGroupId || isSRS)
+  const isRecallBlock = Boolean(block.recallGroupId || block.srsGroupId || isRecall || isSRS)
 
   const styles = getCategoryStyles(block.category, isFromGCal)
 
@@ -127,10 +129,10 @@ export const TimeBlockCard: React.FC<TimeBlockCardProps> = ({
                 <Calendar className="w-3 h-3" />
               </span>
             )}
-            {isSRSBlock && (
+            {isRecallBlock && (
               <span
                 className="p-0.5 rounded bg-action/15 border border-action/30 text-action shrink-0"
-                title="Spaced Repetition (SRS)"
+                title="Recall Loop"
               >
                 <RotateCw className="w-2.5 h-2.5" />
               </span>

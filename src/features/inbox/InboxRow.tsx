@@ -219,8 +219,8 @@ export const InboxRow: React.FC<InboxRowProps> = ({ item, onOpenGeminiConfig }) 
                 )}
                 title={
                   isGeminiConfigured()
-                    ? 'Classify with Gemini AI'
-                    : 'Connect Gemini AI Key'
+                    ? 'Classify with AI Assistant'
+                    : 'Connect AI Assistant Key'
                 }
               >
                 {aiCategorizeMutation.isPending ? (
@@ -243,7 +243,7 @@ export const InboxRow: React.FC<InboxRowProps> = ({ item, onOpenGeminiConfig }) 
                   'bg-action/15 text-action border border-action/30 hover:bg-action hover:text-black hover:border-transparent',
                   'transition-all duration-150 active:scale-95'
                 )}
-                title="Convert this item into a GTD Task (with Spaced Repetition options)"
+                title="Convert this item into a GTD Task (with Recall Loop options)"
               >
                 <span>Convert</span>
                 <ArrowRight className="w-3.5 h-3.5" />

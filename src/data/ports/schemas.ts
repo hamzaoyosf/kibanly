@@ -95,6 +95,8 @@ export const TaskSchema = z.object({
   priority: PriorityEnum.default('medium'),
   dueDate: z.string().nullable().optional(),
   scheduledDate: z.string().nullable().optional(),
+  recallGroupId: z.string().nullable().optional(),
+  recallRole: z.enum(['parent', 'child']).nullable().optional(),
   srsGroupId: z.string().nullable().optional(),
   srsRole: z.enum(['parent', 'child']).nullable().optional(),
   estimateMin: z.number().optional().default(0),
@@ -147,6 +149,7 @@ export const TimeBlockSchema = z.object({
   start: z.string(), // ISO-8601 string
   end: z.string(),   // ISO-8601 string
   taskId: z.string().nullable().optional(),
+  recallGroupId: z.string().nullable().optional(),
   srsGroupId: z.string().nullable().optional(),
   source: TimeBlockSourceEnum.default('OBOiFY'),
   gcal: GCalMetadataSchema.nullable().optional(),

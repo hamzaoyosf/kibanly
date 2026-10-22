@@ -114,10 +114,10 @@ While KiBANLY v1.0 successfully proved the multi-hub architecture, local-first r
   * Offline-first, client-side privacy architecture.
 * Direct action pills: "Launch Web App", "Sign In with Google", "Explore Interactive Demo".
 
-### 4.2 Dedicated Login Page (`/login`)
+### 4.2 Dedicated Login Gateway & AuthModal (`/login`)
 * Minimalist, distraction-free authentication gateway.
 * Sign in with Google (Firebase Auth).
-* Local-first fallback: "Continue as Local Guest (No Cloud Sync)".
+* Soft-UI Hybrid Modal overlay directly on Landing Page and `/login` gateway.
 * Redirect memory: restores user directly to their previously attempted deep-link route upon authentication.
 
 ### 4.3 Clean Slate Protocol
@@ -137,6 +137,7 @@ While KiBANLY v1.0 successfully proved the multi-hub architecture, local-first r
 | Framework | Implementation in OBOiFY |
 |---|---|
 | **Getting Things Done (GTD)** | Global Inbox with instant capture (`Q`), Clarify flow, Next Actions, Scheduled, Waiting For, and Someday lists; 3-stage Weekly Review Wizard |
+| **Recall Loop (Spaced Learning)** | Cognitive science spaced repetition engine; automated review scheduling (24h, 2 weeks, 2 months); Grace Period and Reset Penalty anti-procrastination rules; Visual Guilt overdue indicators |
 | **Eisenhower Matrix** | Action Hub 2x2 flat grid; instant drag-and-drop prioritization (Do / Schedule / Delegate / Delete) |
 | **Time Blocking** | Action Hub Timeline with 15-minute snapping, Google Calendar two-way synchronization, and conflict alerts |
 | **P.A.R.A.** | Knowledge Vault structured containers: Projects (active), Areas (standards), Resources (references), Archives (completed) |
@@ -164,6 +165,9 @@ While KiBANLY v1.0 successfully proved the multi-hub architecture, local-first r
 * **US-ACT-03:** As a user, I want to drag tasks between Eisenhower quadrants to establish priority.
 * **US-ACT-04:** As a user, I want to drag tasks onto the Timeline to schedule 15-minute time blocks synchronized with Google Calendar.
 * **US-ACT-05:** As a user, I want to launch the GTD Weekly Review Wizard to clear my inbox and plan the upcoming week.
+* **US-ACT-06:** As a user converting an inbox thought, I want to enable "Recall Loop" to automatically schedule cognitive reviews at 24h, 2 weeks, and 2 months.
+* **US-ACT-07:** As a user, if I delay a Recall task by $\le 2$ days (Grace Period), I want all subsequent reviews automatically shifted forward; if delayed by $> 2$ days (Reset Penalty), I want the retention loop reset to 1st Recall with fresh subsequent reviews generated.
+* **US-ACT-08:** As a user, I want overdue Recall cards to visually stand out with a red warning border, pulsing icon, and overdue badge (Visual Guilt) so I don't break my memory retention curve.
 
 ### 6.4 Personal Growth Hub
 * **US-GRO-01:** As a user, I want daily habit check-offs with green confirmation states and accurate streak calculation.
@@ -196,7 +200,7 @@ While KiBANLY v1.0 successfully proved the multi-hub architecture, local-first r
 | Module | Feature | Scope / Change in v2.0 | Priority |
 |---|---|---|---|
 | **Public** | Landing Page | Clean, minimalist public marketing page with feature overview & CTAs | **P0** |
-| **Auth** | Dedicated Login Page | Dedicated `/login` route with Google Auth and Guest Mode | **P0** |
+| **Auth** | Dedicated Login Page | Dedicated `/login` route & Soft-UI `<AuthModal />` with Google Auth | **P0** |
 | **Onboarding** | Clean Slate Protocol | Zero mock data for new users; clean empty states with instant CTAs | **P0** |
 | **Theme** | Flat Dark Gray System | Removal of OLED glassmorphism, neon glows, and radial hot-spots; strict Green/Red semantics | **P0** |
 | **Dashboard** | 365-Day Activity Heatmap | Full year contribution grid (53x7) tracking tasks, habits, energy, deep work | **P0** |
@@ -205,6 +209,7 @@ While KiBANLY v1.0 successfully proved the multi-hub architecture, local-first r
 | **Settings** | Privacy UID Masking | Hide raw Firestore UID from interface | **P1** |
 | **Growth** | Data Wipe / Reset Tool | Admin/user tool to safely clear or migrate legacy habit/energy logs | **P1** |
 | **Calendar** | GIS Silent Re-Auth | Background token renewal protocol minimizing 60-min interruptions | **P1** |
+| **Action** | Recall Loop Engine | Cognitive spaced learning with Grace Period ($\le 2$d shift) and Reset Penalty ($> 2$d restart) | **P0** |
 | **Testing** | Cypress E2E Migration | Complete replacement of Playwright with Cypress v13+ suite | **P0** |
 
 ---
@@ -220,7 +225,7 @@ While KiBANLY v1.0 successfully proved the multi-hub architecture, local-first r
 ### 8.2 Security & Data Privacy
 * **Client-Side Encryption of Secrets:** API keys (Gemini, Google Client ID) stored strictly in browser `localStorage`.
 * **Firestore Security:** User-scoped subcollections (`users/{uid}/**`) enforcing strict `request.auth.uid == uid` rules.
-* **Zero Analytics Telemetry:** No third-party behavioral trackers or privacy-invasive telemetry scripts.
+* **Total Privacy:** Zero telemetry scripts, no third-party behavioral trackers, your data stays under your control.
 
 ### 8.3 v2.0 Success Metrics (KPIs)
 * **First-Day Friction:** $> 75\%$ of new users successfully capture their first real task within 3 minutes of signup.
